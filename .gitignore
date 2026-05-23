@@ -1,0 +1,21 @@
+# Swift/Xcode
+.build/
+*.swp
+*.lock
+DerivedData/
+*.xcuserdata
+*.xcworkspace
+xcuserdata/
+Packages/
+Package.resolved
+
+# macOS
+.DS_Store
+*.app
+*.dSYM.zip
+*.dSYM
+
+# IDE
+.idea/
+.vscode/
+*.xcodeproj/
