@@ -15,6 +15,7 @@ final class EventPipeline: ObservableObject {
     // MARK: - Published
 
     @Published var cardEvents = PassthroughSubject<CardEvent, Never>()
+    let onGameStart = PassthroughSubject<Void, Never>()
 
     // MARK: - Init
 
@@ -41,6 +42,12 @@ final class EventPipeline: ObservableObject {
     private func setupEventForwarding() {
         logParser.onEvent = { [weak self] parsed in
             self?.convertAndForward(parsed)
+        }
+        
+        logParser.onGameStart = { [weak self] in
+            guard let self else { return }
+            // 检测到新游戏，触发自动导入
+            self.onGameStart.send()
         }
     }
 

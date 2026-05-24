@@ -413,6 +413,23 @@ final class CardTrackerCore: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+        
+        // 自动检测游戏开始-从剪贴板导入卡组
+        eventPipeline.onGameStart
+            .sink { [weak self] _ in
+                guard let self else { return }
+                // 游戏开始时自动检测剪贴板中的卡组码
+                if self.playerDeck == nil {
+                    let pasteboard = NSPasteboard.general
+                    if let code = pasteboard.string(forType: .string), !code.isEmpty {
+                        self.importDeck(from: code)
+                        if self.playerDeck != nil {
+                            print("[AutoDeck] 已自动从剪贴板导入卡组")
+                        }
+                    }
+                }
+            }
+            .store(in: &cancellables)
     }
 
     func handleCardEvent(_ event: CardEvent) {

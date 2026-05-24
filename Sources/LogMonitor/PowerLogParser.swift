@@ -29,12 +29,15 @@ final class PowerLogParser {
     private var entities: [Int: EntityState] = [:]
     private var playerControllerID: Int = 0
     private var gameInProgress = false
+    private var playerDeckDBFIds: [Int] = []
     private var currentBlock: LogBlock?
     private let cardDatabase: CardDatabase
 
     // MARK: - Event Callback
 
     var onEvent: ((ParsedLogEvent) -> Void)?
+    var onGameStart: (() -> Void)?
+    var onDeckCards: (([Int]) -> Void)?
 
     // MARK: - Log Block Tracking
 

@@ -634,6 +634,14 @@ struct SettingsView: View {
                     }
                 }
                 Toggle("启动时自动开始监控", isOn: $autoStartTracking)
+                HStack {
+                    Image(systemName: "arrow.clipboard")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                    Text("自动检测卡组: 游戏开始时扫描剪贴板")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
 
             Section("OCR 识别") {
