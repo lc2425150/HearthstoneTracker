@@ -3,231 +3,232 @@
   "classes": {},
   "objectVersion": "56",
   "objects": {
-    "C33F2F9A8E894A62A74A22DD": {
+    "F92BE8094EFF406DA2CC2D28": {
       "isa": "PBXBuildFile",
-      "fileRef": "C28D33974B474104B4AE4F55"
+      "fileRef": "EACB371DC65347CDB9075180"
     },
-    "F0E9EC5A27BD4450A37A3DD6": {
+    "51543D9C37AA44C0B1389066": {
       "isa": "PBXBuildFile",
-      "fileRef": "891D375BD120407EA8A787F9"
+      "fileRef": "A6644A35C41049688F8FD782"
     },
-    "7AEAB92DC23E4D479F18C5FC": {
+    "909B65D2F5414A3784E2917D": {
       "isa": "PBXBuildFile",
-      "fileRef": "79883BE587B04F5BA0FCD622"
+      "fileRef": "6C5792C179614E4D9A8D5C2D"
     },
-    "C646D9CD45A04D30878FE174": {
+    "C113369A4EB64DE4848E3079": {
       "isa": "PBXBuildFile",
-      "fileRef": "515FB000815446FA94B9FF15"
+      "fileRef": "2D8409C772EF4E11B6300698"
     },
-    "2EA26B81F7574987A713A450": {
+    "C438223A07264587A4218C80": {
       "isa": "PBXBuildFile",
-      "fileRef": "AA2F21BAF1ED4DE6AEC45953"
+      "fileRef": "C18AAEFDB5CD415DA01C50E8"
     },
-    "4638AE92C3BD4C8E8EFE9835": {
+    "06E391D7E51240079F3DEC60": {
       "isa": "PBXBuildFile",
-      "fileRef": "2C493B3F1FFD4BC99FAC5B15"
+      "fileRef": "7F01659E611B48FB9F882B55"
     },
-    "1C16E443403A495FBB6C454D": {
+    "DF08EA9958F04207AA3BF965": {
       "isa": "PBXBuildFile",
-      "fileRef": "BBE50443CF1846E3A19FB439"
+      "fileRef": "4850AFFB746340738AB6D95C"
     },
-    "12640D7D784647888EAE1CD5": {
+    "8E8649F6E6844B8E807F5A8A": {
       "isa": "PBXBuildFile",
-      "fileRef": "E338A415C1CD49F2A9C27F0C"
+      "fileRef": "B8DBB1876FFF468DBCB28FBB"
     },
-    "88FB88EBB22D4FEEA13E4BCB": {
+    "9DE731B311614B41ADE08432": {
       "isa": "PBXBuildFile",
-      "fileRef": "7AE89B36526540118D36EBC1"
+      "fileRef": "6F0A7C68718F4B069BF1B381"
     },
-    "47405643EA41418C94E792E5": {
+    "EE2E5D82FABD40C3AE34A525": {
       "isa": "PBXBuildFile",
-      "fileRef": "C6C7855786674CA2A94B8814"
+      "fileRef": "FE960578C43543F7B0D667B1"
     },
-    "AF01ABE0404846A3AEDBAA4C": {
+    "33C2227B4D9F42DE971C80BC": {
       "isa": "PBXBuildFile",
-      "fileRef": "ACC6646F18794476B09E56C3"
+      "fileRef": "BBB0E9884E354092ACF69234"
     },
-    "F5B9B1239C4C4AF08BAE4D36": {
+    "2C16AE12188F43EE8A6FAC5C": {
       "isa": "PBXBuildFile",
-      "fileRef": "15459AA8AC8645EA89D004F1"
+      "fileRef": "B81A9B9E6CA54DECA929497D"
     },
-    "46D3791D97A9443A8C25307E": {
+    "0DB2E6824E144A67AD1B260B": {
       "isa": "PBXBuildFile",
-      "fileRef": "96C0192421644AD7BA6C1C7D"
+      "fileRef": "E982864444A645CE886E5630"
     },
-    "21254D8B25C3454DB203E2D3": {
+    "EDF6918288B041FBB229FE53": {
       "isa": "PBXBuildFile",
-      "fileRef": "88FE1EBC252D4C949019AC8C"
+      "fileRef": "85BC21622ED3404BB113B384"
     },
-    "C28D33974B474104B4AE4F55": {
+    "EACB371DC65347CDB9075180": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "ContentView.swift",
       "sourceTree": "<group>"
     },
-    "891D375BD120407EA8A787F9": {
+    "A6644A35C41049688F8FD782": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "HearthstoneTrackerApp.swift",
       "sourceTree": "<group>"
     },
-    "79883BE587B04F5BA0FCD622": {
+    "6C5792C179614E4D9A8D5C2D": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "Models/CardModels.swift",
       "sourceTree": "<group>"
     },
-    "515FB000815446FA94B9FF15": {
-      "isa": "PBXFileReference",
-      "lastKnownFileType": "sourcecode.swift",
-      "path": "Services/CardDataService.swift",
-      "sourceTree": "<group>"
-    },
-    "AA2F21BAF1ED4DE6AEC45953": {
-      "isa": "PBXFileReference",
-      "lastKnownFileType": "sourcecode.swift",
-      "path": "Services/CardImageLoader.swift",
-      "sourceTree": "<group>"
-    },
-    "2C493B3F1FFD4BC99FAC5B15": {
-      "isa": "PBXFileReference",
-      "lastKnownFileType": "sourcecode.swift",
-      "path": "Services/OCRService.swift",
-      "sourceTree": "<group>"
-    },
-    "BBE50443CF1846E3A19FB439": {
-      "isa": "PBXFileReference",
-      "lastKnownFileType": "sourcecode.swift",
-      "path": "Services/TrackingService.swift",
-      "sourceTree": "<group>"
-    },
-    "E338A415C1CD49F2A9C27F0C": {
+    "2D8409C772EF4E11B6300698": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "Utilities/Constants.swift",
       "sourceTree": "<group>"
     },
-    "7AE89B36526540118D36EBC1": {
+    "C18AAEFDB5CD415DA01C50E8": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "Utilities/DeckCodeParser.swift",
       "sourceTree": "<group>"
     },
-    "C6C7855786674CA2A94B8814": {
+    "7F01659E611B48FB9F882B55": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "Views/DeckDetailView.swift",
       "sourceTree": "<group>"
     },
-    "ACC6646F18794476B09E56C3": {
+    "4850AFFB746340738AB6D95C": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "Views/DeckLibraryView.swift",
       "sourceTree": "<group>"
     },
-    "15459AA8AC8645EA89D004F1": {
+    "B8DBB1876FFF468DBCB28FBB": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "Views/LiveMatchView.swift",
       "sourceTree": "<group>"
     },
-    "96C0192421644AD7BA6C1C7D": {
+    "6F0A7C68718F4B069BF1B381": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "Views/SettingsView.swift",
       "sourceTree": "<group>"
     },
-    "88FE1EBC252D4C949019AC8C": {
+    "FE960578C43543F7B0D667B1": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "sourcecode.swift",
       "path": "Views/StatsView.swift",
       "sourceTree": "<group>"
     },
-    "25BBE27D0ED24B98846DD4FC": {
+    "BBB0E9884E354092ACF69234": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Services/CardDataService.swift",
+      "sourceTree": "<group>"
+    },
+    "B81A9B9E6CA54DECA929497D": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Services/CardImageLoader.swift",
+      "sourceTree": "<group>"
+    },
+    "E982864444A645CE886E5630": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Services/OCRService.swift",
+      "sourceTree": "<group>"
+    },
+    "85BC21622ED3404BB113B384": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Services/TrackingService.swift",
+      "sourceTree": "<group>"
+    },
+    "9DE5D4CD6F4D424EBF0744ED": {
       "isa": "PBXFileReference",
       "lastKnownFileType": "text.plist.xml",
       "path": "Info.plist",
       "sourceTree": "<group>"
     },
-    "757F8710F85A4882A90BFFB8": {
+    "DC202F0278F44AEA8237818C": {
       "isa": "PBXFileReference",
       "explicitFileType": "wrapper.application",
       "includeInIndex": 0,
       "path": "HearthstoneTracker.app",
       "sourceTree": "BUILT_PRODUCTS_DIR"
     },
-    "29A124ED3C13431A8533DBF1": {
+    "874D862883814867AF71E695": {
       "isa": "PBXGroup",
       "children": [
-        "C28D33974B474104B4AE4F55",
-        "891D375BD120407EA8A787F9",
-        "79883BE587B04F5BA0FCD622",
-        "515FB000815446FA94B9FF15",
-        "AA2F21BAF1ED4DE6AEC45953",
-        "2C493B3F1FFD4BC99FAC5B15",
-        "BBE50443CF1846E3A19FB439",
-        "E338A415C1CD49F2A9C27F0C",
-        "7AE89B36526540118D36EBC1",
-        "C6C7855786674CA2A94B8814",
-        "ACC6646F18794476B09E56C3",
-        "15459AA8AC8645EA89D004F1",
-        "96C0192421644AD7BA6C1C7D",
-        "88FE1EBC252D4C949019AC8C",
-        "25BBE27D0ED24B98846DD4FC",
-        "757F8710F85A4882A90BFFB8"
+        "EACB371DC65347CDB9075180",
+        "A6644A35C41049688F8FD782",
+        "6C5792C179614E4D9A8D5C2D",
+        "2D8409C772EF4E11B6300698",
+        "C18AAEFDB5CD415DA01C50E8",
+        "7F01659E611B48FB9F882B55",
+        "4850AFFB746340738AB6D95C",
+        "B8DBB1876FFF468DBCB28FBB",
+        "6F0A7C68718F4B069BF1B381",
+        "FE960578C43543F7B0D667B1",
+        "BBB0E9884E354092ACF69234",
+        "B81A9B9E6CA54DECA929497D",
+        "E982864444A645CE886E5630",
+        "85BC21622ED3404BB113B384",
+        "9DE5D4CD6F4D424EBF0744ED",
+        "DC202F0278F44AEA8237818C"
       ],
       "path": "HearthstoneTracker-iOS",
+      "name": "HearthstoneTracker-iOS",
       "sourceTree": "<group>"
     },
-    "6EDAD71D36AC457189FE406C": {
+    "783D9AFA37B245F58B5220AC": {
       "isa": "PBXGroup",
       "children": [
-        "29A124ED3C13431A8533DBF1"
+        "874D862883814867AF71E695"
       ],
       "sourceTree": "<group>"
     },
-    "F7AD3E56905C46719C9B7402": {
+    "FE462AA347C044A4BBC8BC07": {
       "isa": "PBXSourcesBuildPhase",
       "buildActionMask": 2147483647,
       "files": [
-        "C33F2F9A8E894A62A74A22DD",
-        "F0E9EC5A27BD4450A37A3DD6",
-        "7AEAB92DC23E4D479F18C5FC",
-        "C646D9CD45A04D30878FE174",
-        "2EA26B81F7574987A713A450",
-        "4638AE92C3BD4C8E8EFE9835",
-        "1C16E443403A495FBB6C454D",
-        "12640D7D784647888EAE1CD5",
-        "88FB88EBB22D4FEEA13E4BCB",
-        "47405643EA41418C94E792E5",
-        "AF01ABE0404846A3AEDBAA4C",
-        "F5B9B1239C4C4AF08BAE4D36",
-        "46D3791D97A9443A8C25307E",
-        "21254D8B25C3454DB203E2D3"
+        "F92BE8094EFF406DA2CC2D28",
+        "51543D9C37AA44C0B1389066",
+        "909B65D2F5414A3784E2917D",
+        "C113369A4EB64DE4848E3079",
+        "C438223A07264587A4218C80",
+        "06E391D7E51240079F3DEC60",
+        "DF08EA9958F04207AA3BF965",
+        "8E8649F6E6844B8E807F5A8A",
+        "9DE731B311614B41ADE08432",
+        "EE2E5D82FABD40C3AE34A525",
+        "33C2227B4D9F42DE971C80BC",
+        "2C16AE12188F43EE8A6FAC5C",
+        "0DB2E6824E144A67AD1B260B",
+        "EDF6918288B041FBB229FE53"
       ],
       "runOnlyForDeploymentPostprocessing": 0
     },
-    "631E6D125E8B4D0C950EB946": {
+    "066613ACCCED4A0F891E2759": {
       "isa": "PBXResourcesBuildPhase",
       "buildActionMask": 2147483647,
       "files": [],
       "runOnlyForDeploymentPostprocessing": 0
     },
-    "23C57350763646F2815F427D": {
+    "65C910BC70F841A69F03A367": {
       "isa": "PBXNativeTarget",
-      "buildConfigurationList": "2D9557ED871847FABFFB61B7",
+      "buildConfigurationList": "79BBEFDFDB264DE3BE988761",
       "buildPhases": [
-        "F7AD3E56905C46719C9B7402",
-        "631E6D125E8B4D0C950EB946"
+        "FE462AA347C044A4BBC8BC07",
+        "066613ACCCED4A0F891E2759"
       ],
       "buildRules": [],
       "dependencies": [],
       "name": "HearthstoneTracker",
       "productName": "HearthstoneTracker",
-      "productReference": "757F8710F85A4882A90BFFB8",
+      "productReference": "DC202F0278F44AEA8237818C",
       "productType": "com.apple.product-type.application"
     },
-    "BC5DF47B2E17406881270487": {
+    "F67B90AE5046434DBE849AD1": {
       "isa": "XCBuildConfiguration",
       "buildSettings": {
         "ALWAYS_SEARCH_USER_PATHS": "NO",
@@ -236,15 +237,15 @@
         "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
         "PRODUCT_BUNDLE_IDENTIFIER": "com.hearthstonetracker.ios",
         "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SDKROOT": "iphoneos",
+        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator",
         "SWIFT_VERSION": "5.0",
         "TARGETED_DEVICE_FAMILY": "1,2",
-        "CODE_SIGN_STYLE": "Automatic",
-        "SDKROOT": "iphoneos",
-        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator"
+        "CODE_SIGN_STYLE": "Automatic"
       },
       "name": "Debug"
     },
-    "DB8377AD687947FAAAD93688": {
+    "66AFE0DD8EA1406F884BEB68": {
       "isa": "XCBuildConfiguration",
       "buildSettings": {
         "ALWAYS_SEARCH_USER_PATHS": "NO",
@@ -253,14 +254,14 @@
         "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
         "PRODUCT_BUNDLE_IDENTIFIER": "com.hearthstonetracker.ios",
         "PRODUCT_NAME": "$(TARGET_NAME)",
-        "SWIFT_VERSION": "5.0",
-        "TARGETED_DEVICE_FAMILY": "1,2",
         "SDKROOT": "iphoneos",
-        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator"
+        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator",
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "1,2"
       },
       "name": "Release"
     },
-    "13F622E0B9614579846E99CA": {
+    "F7796F78969A44C3B12C275B": {
       "isa": "XCBuildConfiguration",
       "buildSettings": {
         "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
@@ -274,15 +275,14 @@
         "MARKETING_VERSION": "1.0.0",
         "PRODUCT_BUNDLE_IDENTIFIER": "com.hearthstonetracker.ios",
         "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SDKROOT": "iphoneos",
         "SWIFT_VERSION": "5.0",
         "TARGETED_DEVICE_FAMILY": "1,2",
-        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "DEBUG",
-        "SDKROOT": "iphoneos",
-        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator"
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "DEBUG"
       },
       "name": "Debug"
     },
-    "9774BF0BEFF44016AA1BD5FA": {
+    "AF3633AA6AE74F868D5C3573": {
       "isa": "XCBuildConfiguration",
       "buildSettings": {
         "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
@@ -296,39 +296,38 @@
         "MARKETING_VERSION": "1.0.0",
         "PRODUCT_BUNDLE_IDENTIFIER": "com.hearthstonetracker.ios",
         "PRODUCT_NAME": "$(TARGET_NAME)",
-        "SWIFT_VERSION": "5.0",
-        "TARGETED_DEVICE_FAMILY": "1,2",
         "SDKROOT": "iphoneos",
-        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator"
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "1,2"
       },
       "name": "Release"
     },
-    "1889D981A32E4CCFBA8BCE4F": {
+    "2FF4C6B1FE9949578E4A6F9D": {
       "isa": "XCConfigurationList",
       "buildConfigurations": [
-        "BC5DF47B2E17406881270487",
-        "DB8377AD687947FAAAD93688"
+        "F67B90AE5046434DBE849AD1",
+        "66AFE0DD8EA1406F884BEB68"
       ],
       "defaultConfigurationIsVisible": 0,
       "defaultConfigurationName": "Release"
     },
-    "2D9557ED871847FABFFB61B7": {
+    "79BBEFDFDB264DE3BE988761": {
       "isa": "XCConfigurationList",
       "buildConfigurations": [
-        "13F622E0B9614579846E99CA",
-        "9774BF0BEFF44016AA1BD5FA"
+        "F7796F78969A44C3B12C275B",
+        "AF3633AA6AE74F868D5C3573"
       ],
       "defaultConfigurationIsVisible": 0,
       "defaultConfigurationName": "Release"
     },
-    "07D00FAADC4E48E39957B76E": {
+    "4BED91B52B084D4A9E450262": {
       "isa": "PBXProject",
       "attributes": {
         "BuildIndependentTargetsInParallel": 1,
         "LastSwiftUpdateCheck": 2605,
         "LastUpgradeCheck": 2605
       },
-      "buildConfigurationList": "1889D981A32E4CCFBA8BCE4F",
+      "buildConfigurationList": "2FF4C6B1FE9949578E4A6F9D",
       "compatibilityVersion": "Xcode 14.0",
       "developmentRegion": "zh-Hans",
       "hasScannedForEncodings": 0,
@@ -337,14 +336,14 @@
         "en",
         "Base"
       ],
-      "mainGroup": "6EDAD71D36AC457189FE406C",
-      "productRefGroup": "29A124ED3C13431A8533DBF1",
+      "mainGroup": "783D9AFA37B245F58B5220AC",
+      "productRefGroup": "874D862883814867AF71E695",
       "projectDirPath": "",
       "projectRoot": "",
       "targets": [
-        "23C57350763646F2815F427D"
+        "65C910BC70F841A69F03A367"
       ]
     }
   },
-  "rootObject": "07D00FAADC4E48E39957B76E"
+  "rootObject": "4BED91B52B084D4A9E450262"
 }

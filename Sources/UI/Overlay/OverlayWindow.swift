@@ -30,6 +30,8 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
             let view = OverlayView().environmentObject(core)
             window?.contentView = NSHostingView(rootView: view)
         }
+        // 设置窗口级别（浮动，可在全屏应用上方）
+        window?.level = .floating
         positionNextToHearthstone()
         window?.makeKeyAndOrderFront(nil)
         startPositionTracking()
@@ -74,7 +76,7 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
         let initialLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
         window.ignoresMouseEvents = initialLocked
         window.isMovableByWindowBackground = !initialLocked
-        window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         window.hasShadow = true
         window.isMovableByWindowBackground = true
         window.titlebarAppearsTransparent = true
@@ -113,14 +115,17 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
 
     func positionNextToHearthstone() {
         guard let hsFrame = findHearthstoneWindow(), let win = window else {
-            // 炉石未运行，放在屏幕右上角
+            // 炉石未运行，恢复普通窗口级别并放在屏幕右上角
+            window?.level = .floating
             if let screen = NSScreen.main {
                 let sf = screen.visibleFrame
                 window?.setFrameOrigin(NSPoint(x: sf.maxX - 340, y: sf.maxY - 500))
             }
             return
         }
-
+        
+        // 检测到炉石窗口，提升到屏蔽级别（覆盖全屏游戏）
+        window?.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
         lastHearthstoneFrame = hsFrame
         
         // 如果用户正在拖拽，不自动定位
