@@ -14,7 +14,7 @@ final class CardDataUpdater {
 
     // MARK: - Public
 
-    /// 检查并下载最新卡牌数据
+    /// 清空旧数据并重新下载最新卡牌数据
     func checkForUpdates() async throws -> UpdateResult {
         let url = URL(string: Constants.cardDataUpdateURL)!
         let (data, response) = try await session.data(from: url)
@@ -25,7 +25,9 @@ final class CardDataUpdater {
         }
 
         let cards = try parseCardJSON(data)
-        try await database.seedCards(cards)
+
+        // 清空旧数据并用新数据重填
+        try await database.replaceAllCards(cards)
 
         return UpdateResult(
             totalCards: cards.count,
@@ -52,6 +54,7 @@ final class CardDataUpdater {
         let rawCards = try decoder.decode([RawCard].self, from: data)
 
         return rawCards.compactMap { raw in
+            // 过滤英雄/英雄技能（不能放入牌库）
             guard raw.type != "HERO", raw.type != "HERO_POWER" else { return nil }
 
             return CardSeedData(
@@ -98,18 +101,22 @@ enum UpdateError: Error, LocalizedError {
     }
 }
 
-// MARK: - Database Seeding Extension
+// MARK: - Database Extension
 
 extension CardDatabase {
-    func seedCards(_ seedData: [CardSeedData]) async throws {
+    /// 清空所有卡牌并批量插入新数据
+    func replaceAllCards(_ seedData: [CardSeedData]) async throws {
         let context = modelContainer.mainContext
 
-        // 批量插入：先获取已有 DBF ID 集合，避免重复
-        let existingIds = try Set(
-            context.fetch(FetchDescriptor<Card>()).map { $0.dbfId }
-        )
+        // 删除所有旧卡牌
+        let fetchDescriptor = FetchDescriptor<Card>()
+        let oldCards = try context.fetch(fetchDescriptor)
+        for card in oldCards {
+            context.delete(card)
+        }
 
-        for data in seedData where !existingIds.contains(data.dbfId) {
+        // 批量插入新卡牌
+        for data in seedData {
             let card = Card(
                 dbfId: data.dbfId,
                 cardId: data.cardId,

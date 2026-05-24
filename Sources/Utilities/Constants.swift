@@ -14,7 +14,6 @@ enum Constants {
         "/Applications/Hearthstone/Logs/Power.log"
     ]
 
-    /// Power.log 路径（日志监控使用第一条匹配路径）
     static var powerLogPath: String {
         for path in logFilePaths {
             if FileManager.default.fileExists(atPath: path) { return path }
@@ -22,7 +21,6 @@ enum Constants {
         return logFilePaths.first ?? ""
     }
 
-    /// 卡牌JSON数据本地缓存路径
     static var cardDataPath: String {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         return appSupport.appendingPathComponent("HearthstoneTracker/cards.json").path
@@ -35,18 +33,8 @@ enum Constants {
     static let overlayMaxOpacity = 1.0
     static let overlayDefaultOpacity = 0.7
 
-    // MARK: - Hotkeys
-
-    static let toggleOverlayKey = "o"
-    static let importDeckKey = "i"
-    static let hotkeyModifiers = "cmd+shift"
-
     // MARK: - API
 
-    static let cardDataUpdateURL = "https://api.hearthstonejson.com/v1/latest/zhCN/cards.json"
-
-    // MARK: - Card
-
-    static let standardDeckSizes = [30, 40]
-    static let maxDeckSize = 60
+    /// 卡牌数据源：使用 enUS 获取完整英文字段（含 cardId），dbfId 作为主键查询
+    static let cardDataUpdateURL = "https://api.hearthstonejson.com/v1/latest/enUS/cards.json"
 }

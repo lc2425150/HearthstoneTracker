@@ -10,12 +10,14 @@ struct HearthstoneTrackerApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(core)
-                .frame(minWidth: 400, minHeight: 500)
+                .frame(minWidth: 420, minHeight: 520)
                 .onAppear {
                     Task { await core.checkCardDataUpdate() }
                 }
         }
         .windowResizability(.contentSize)
+        .windowStyle(.hiddenTitleBar)
+        .windowToolbarStyle(.unifiedCompact)
         .commands {
             deckCommands
             AppMenuCommands()
@@ -33,61 +35,52 @@ struct HearthstoneTrackerApp: App {
             Button("导入卡组码") {
                 core.requestDeckImport()
             }
-            .keyboardShortcut("i", modifiers: .command)
 
             Divider()
 
             Button("切换悬浮窗") {
                 core.toggleOverlay()
             }
-            .keyboardShortcut("o", modifiers: [.command, .shift])
 
             Divider()
 
             Button("检查卡牌更新") {
                 Task { await core.checkCardDataUpdate() }
             }
-            .keyboardShortcut("u", modifiers: .command)
 
             Divider()
 
             Button("开始/暂停追踪") {
                 core.toggleTracking()
             }
-            .keyboardShortcut("t", modifiers: .command)
 
             Divider()
 
             Button("OCR扫描") {
                 core.triggerOCRScan()
             }
-            .keyboardShortcut("s", modifiers: [.command, .shift])
 
             Button("对手追踪") {
                 core.startOpponentTracking()
             }
-            .keyboardShortcut("o", modifiers: [.command, .option])
 
             Divider()
 
             Button("调试面板") {
                 core.showDebugPanel()
             }
-            .keyboardShortcut("d", modifiers: [.command, .shift])
 
             Divider()
 
             Button("测试工具") {
                 core.showTestHarness()
             }
-            .keyboardShortcut("e", modifiers: [.command, .shift])
 
             Divider()
 
             Button("重置对局") {
                 core.resetMatch()
             }
-            .keyboardShortcut("r", modifiers: [.command, .shift])
         }
     }
 }

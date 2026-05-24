@@ -8,7 +8,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             // 顶部游戏状态栏
-            gameStatusBar
+            StatusView()
 
             TabView(selection: $selectedTab) {
                 DeckView()
@@ -36,72 +36,10 @@ struct ContentView: View {
                     .tag(3)
             }
         }
-        .frame(minWidth: 400, minHeight: 500)
+        .frame(minWidth: 420, minHeight: 520)
         .task {
             await core.checkCardDataUpdate()
         }
-    }
-
-    // MARK: - Game Status Bar
-
-    private var gameStatusBar: some View {
-        HStack(spacing: 8) {
-            // 游戏状态指示灯
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(core.gameLauncher.isGameRunning ? Color.green : Color.orange)
-                    .frame(width: 8, height: 8)
-                Text(core.gameLauncher.isGameRunning ? "炉石运行中" : "炉石未启动")
-                    .font(.caption)
-                    .foregroundColor(core.gameLauncher.isGameRunning ? .green : .orange)
-            }
-
-            Spacer()
-
-            // 启动/强制退出按钮
-            if core.gameLauncher.isGameRunning {
-                Button(action: { _ = core.gameLauncher.forceQuitGame() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "stop.circle")
-                        Text("退出游戏")
-                    }
-                    .font(.caption)
-                }
-                .buttonStyle(.borderless)
-                .foregroundColor(.red)
-            } else {
-                Button(action: { _ = core.launchHearthstoneIfNeeded() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "play.circle.fill")
-                        Text("启动炉石")
-                    }
-                    .font(.caption)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-            }
-
-            Divider()
-                .frame(height: 16)
-
-            // 追踪控制
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(core.isTracking ? Color.green : Color.gray)
-                    .frame(width: 6, height: 6)
-                Text(core.isTracking ? "追踪中" : "未追踪")
-                    .font(.caption2)
-                Button(core.isTracking ? "暂停" : "开始") {
-                    core.toggleTracking()
-                }
-                .buttonStyle(.borderless)
-                .font(.caption2)
-                .foregroundColor(.blue)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(.quaternary.opacity(0.5))
     }
 }
 
@@ -149,7 +87,7 @@ struct DeckView: View {
             Text("未加载牌库")
                 .font(.title3)
                 .foregroundColor(.secondary)
-            Text("使用 Cmd+I 从剪贴板导入，或粘贴卡组码到下方输入框")
+            Text("粘贴卡组码到下方输入框导入")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

@@ -1,31 +1,50 @@
 import SwiftUI
 import AppKit
 
-/// 悬浮窗控制器：管理透明悬浮窗口的生命周期和属性
+/// 悬浮窗控制器：管理透明悬浮窗口，贴合炉石传说窗口
 final class OverlayWindowController: @unchecked Sendable {
     static let shared = OverlayWindowController()
     private var window: NSWindow?
+    private var positionTimer: Timer?
+    private var preferredSide: OverlaySide = .right
 
-    func show() {
+    enum OverlaySide {
+        case left, right
+    }
+
+    func show(core: CardTrackerCore) {
         if window == nil {
-            window = createOverlayWindow()
+            window = createOverlayWindow(core: core)
+        } else {
+            // 重新注入最新的 core（环境对象可能已变化）
+            let view = OverlayView().environmentObject(core)
+            window?.contentView = NSHostingView(rootView: view)
         }
+        positionNextToHearthstone()
         window?.makeKeyAndOrderFront(nil)
+        startPositionTracking()
     }
 
     func hide() {
+        stopPositionTracking()
         window?.orderOut(nil)
     }
 
-    func toggle() {
+    func toggle(core: CardTrackerCore) {
         if window?.isVisible == true {
             hide()
         } else {
-            show()
+            show(core: core)
         }
     }
 
-    private func createOverlayWindow() -> NSWindow {
+    var isVisible: Bool {
+        window?.isVisible ?? false
+    }
+
+    // MARK: - Window Creation
+
+    private func createOverlayWindow(core: CardTrackerCore) -> NSWindow {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 480),
             styleMask: [.borderless, .fullSizeContentView],
@@ -33,31 +52,85 @@ final class OverlayWindowController: @unchecked Sendable {
             defer: false
         )
 
-        // 悬浮窗核心属性
         window.level = .floating
         window.isOpaque = false
         window.backgroundColor = NSColor.clear
-        window.ignoresMouseEvents = true
+        window.ignoresMouseEvents = false
         window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         window.hasShadow = false
-        window.isMovable = false
+        window.isMovableByWindowBackground = true
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
 
-        // 默认位置：屏幕右上角
-        if let screen = NSScreen.main {
-            let screenFrame = screen.visibleFrame
-            let x = screenFrame.maxX - 340
-            let y = screenFrame.maxY - 500
-            window.setFrameOrigin(NSPoint(x: x, y: y))
-        }
-
-        // SwiftUI OverlayView 作为内容
-        let overlayView = OverlayView()
+        let overlayView = OverlayView().environmentObject(core)
         let hostingView = NSHostingView(rootView: overlayView)
         window.contentView = hostingView
 
         return window
+    }
+
+    // MARK: - Hearthstone Window Tracking
+
+    private func findHearthstoneWindow() -> CGRect? {
+        let options = CGWindowListOption(arrayLiteral: [.optionOnScreenOnly, .excludeDesktopElements])
+        guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
+            return nil
+        }
+
+        for info in windowList {
+            if let ownerName = info["kCGWindowOwnerName"] as? String,
+               ownerName == "Hearthstone",
+               let boundsDict = info["kCGWindowBounds"] as? [String: CGFloat],
+               let x = boundsDict["X"],
+               let y = boundsDict["Y"],
+               let w = boundsDict["Width"],
+               let h = boundsDict["Height"],
+               w > 300, h > 300 {
+                return CGRect(x: x, y: y, width: w, height: h)
+            }
+        }
+        return nil
+    }
+
+    func positionNextToHearthstone() {
+        guard let hsFrame = findHearthstoneWindow(), let win = window else {
+            if let screen = NSScreen.main {
+                let sf = screen.visibleFrame
+                window?.setFrameOrigin(NSPoint(x: sf.maxX - 340, y: sf.maxY - 500))
+            }
+            return
+        }
+
+        let overlaySize = win.frame.size
+        let gap: CGFloat = 0
+
+        let origin: NSPoint
+        switch preferredSide {
+        case .right:
+            origin = NSPoint(
+                x: hsFrame.maxX + gap,
+                y: hsFrame.maxY - overlaySize.height
+            )
+        case .left:
+            origin = NSPoint(
+                x: hsFrame.minX - overlaySize.width - gap,
+                y: hsFrame.maxY - overlaySize.height
+            )
+        }
+
+        win.setFrameOrigin(origin)
+    }
+
+    private func startPositionTracking() {
+        positionTimer?.invalidate()
+        positionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.positionNextToHearthstone()
+        }
+    }
+
+    private func stopPositionTracking() {
+        positionTimer?.invalidate()
+        positionTimer = nil
     }
 }
 
@@ -65,7 +138,7 @@ final class OverlayWindowController: @unchecked Sendable {
 
 extension CardTrackerCore {
     func toggleOverlay() {
-        OverlayWindowController.shared.toggle()
+        OverlayWindowController.shared.toggle(core: self)
         isOverlayVisible.toggle()
     }
 }
