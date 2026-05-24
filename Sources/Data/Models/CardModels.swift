@@ -48,6 +48,17 @@ struct DiscoveredCard: Identifiable {
     var isPlayed = false
 }
 
+
+extension DiscoveredCard {
+    var sourceLabel: String {
+        switch source {
+        case .discover: return "发现"
+        case .random: return "随机"
+        case .generated(let by): return by
+        }
+    }
+}
+
 enum DiscoverySource: Equatable {
     case discover(pool: [Card])
     case random(from: Card)

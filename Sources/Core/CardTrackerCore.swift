@@ -295,12 +295,13 @@ final class CardTrackerCore: ObservableObject {
     }
 
     func endMatch(result: MatchResult) {
-        guard var m = currentMatch else { return }
+        guard let m = currentMatch else { return }
         m.endTime = Date()
         m.result = result
         cardDatabase.saveMatch(m)
         Task { @MainActor in
-            await loadMatchHistory()
+            loadMatchHistory()
+            loadMatchHistory()
         }
         currentMatch = nil
         resetMatch()
@@ -361,6 +362,10 @@ final class CardTrackerCore: ObservableObject {
     func toggleOverlay() {
         OverlayWindowController.shared.toggle(core: self)
         isOverlayVisible = OverlayWindowController.shared.isVisible
+    }
+    
+    func switchOverlaySide() {
+        OverlayWindowController.shared.switchSide()
     }
 
     func showOverlay() {

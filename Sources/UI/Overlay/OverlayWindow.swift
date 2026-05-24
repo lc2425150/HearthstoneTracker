@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 /// 悬浮窗控制器：管理透明悬浮窗口，贴合炉石传说窗口
-final class OverlayWindowController: @unchecked Sendable {
+final class OverlayWindowController: NSObject, @unchecked Sendable {
     static let shared = OverlayWindowController()
     private var window: NSWindow?
     private var positionTimer: Timer?

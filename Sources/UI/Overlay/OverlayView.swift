@@ -203,7 +203,9 @@ struct PlayerDeckSection: View {
                         Text("发现牌")
                             .font(.caption2)
                             .foregroundColor(.blue.opacity(0.7))
-                        ForEach(deck.discoveredCards) { discovered in
+                        let discCards = deck.discoveredCards
+                        ForEach(Array(discCards.indices), id: \.self) { i in
+                            let discovered = discCards[i]
                             HStack {
                                 OverlayCardRow(card: discovered.card, isInHand: false)
                                 Spacer()
@@ -264,8 +266,10 @@ struct OpponentSection: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
-                    ForEach(tracker.playedCards.sorted(by: { $0.cost < $1.cost })) { card in
-                        OverlayCardRow(card: card, isInHand: false)
+                    let sortedOppCards = tracker.playedCards.sorted(by: { $0.cost < $1.cost })
+                    ForEach(Array(sortedOppCards.indices), id: \.self) { i in
+                        let record = sortedOppCards[i]
+                        OverlayCardRow(card: record.card, isInHand: false)
                     }
 
                     if tracker.playedCards.isEmpty {
@@ -294,7 +298,9 @@ struct OpponentInfoPreview: View {
 
             if !tracker.playedCards.isEmpty {
                 HStack(spacing: -4) {
-                    ForEach(tracker.playedCards.prefix(10)) { card in
+                    let recentCards = Array(tracker.playedCards.prefix(10))
+                    ForEach(0..<recentCards.count, id: \.self) { idx in
+                        let card = recentCards[idx].card
                         CardThumbnailMini(cardId: card.cardId, cardName: card.name)
                     }
                     if tracker.playedCards.count > 10 {

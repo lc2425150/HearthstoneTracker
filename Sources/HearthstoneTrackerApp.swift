@@ -34,7 +34,7 @@ struct HearthstoneTrackerApp: App {
         }
     }
 
-    @CommandBuilder
+    @CommandsBuilder
     private var deckCommands: some Commands {
         CommandGroup(replacing: .newItem) {
             Button("导入卡组码") {

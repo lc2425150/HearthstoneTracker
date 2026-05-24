@@ -183,22 +183,12 @@ struct DeckView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     if !deck.originalCards.isEmpty {
                         SectionHeader(title: "原卡组 (\(deck.remainingOriginalCount) / \(deck.originalCards.count))")
-                        ForEach(deck.remainingOriginal.sorted(by: { $0.cost < $1.cost }), id: \.dbfId) { card in
-                            cardRow(card, count: 1)
-                        }
+                        CardListSection(cards: deck.remainingOriginal.sorted(by: { $0.cost < $1.cost }))
                     }
                     if !deck.discoveredCards.isEmpty {
                         SectionHeader(title: "发现牌 (\(deck.discoveredCards.count))")
                             .foregroundColor(.blue)
-                        ForEach(deck.discoveredCards, id: \.id) { discovered in
-                            HStack {
-                                cardRow(discovered.card, count: 1)
-                                Spacer()
-                                Text(discovered.sourceLabel)
-                                    .font(.caption2)
-                                    .foregroundColor(.blue.opacity(0.7))
-                            }
-                        }
+                        DiscoveredCardList(cards: deck.discoveredCards)
                     }
                 }
             }
@@ -298,7 +288,8 @@ struct StatsView: View {
                 Spacer()
             } else {
                 List {
-                    ForEach(core.matchRecords) { match in
+                    let matches = core.matchRecords
+                    ForEach(matches) { match in
                         MatchHistoryRow(match: match)
                     }
                     .onDelete { indexSet in
@@ -412,7 +403,8 @@ struct DeckLibraryView: View {
                 Spacer()
             } else {
                 List {
-                    ForEach(core.savedDecks) { deck in
+                    let savedDecks = core.savedDecks
+                    ForEach(savedDecks) { deck in
                         DeckLibraryRow(deck: deck, onSelect: {
                             core.importDeck(from: deck.deckCode)
                             core.updateDeckLastUsed(deck)
