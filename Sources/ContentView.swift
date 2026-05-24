@@ -581,6 +581,50 @@ struct SettingsView: View {
                 }
             }
 
+            Section("HSReplay.net 集成") {
+                HStack {
+                    if HSReplayManager.shared.isAuthenticated {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        VStack(alignment: .leading) {
+                            Text("已登录")
+                                .font(.subheadline)
+                            if let name = HSReplayManager.shared.username {
+                                Text(name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    } else {
+                        Image(systemName: "xmark.circle")
+                            .foregroundColor(.gray)
+                        Text("未登录")
+                            .font(.subheadline)
+                    }
+                    Spacer()
+                    if HSReplayManager.shared.isAuthenticated {
+                        Button("登出") {
+                            HSReplayManager.shared.logout()
+                        }
+                        .font(.caption)
+                    } else {
+                        Button("获取 Token") {
+                            HSReplayManager.shared.authenticate()
+                        }
+                        .font(.caption)
+                    }
+                }
+                
+                HStack {
+                    Text("上传状态:")
+                        .font(.caption)
+                    Spacer()
+                    Text("等待上传")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
             Section("日志监控") {
                 HStack {
                     Text("状态: \(core.isTracking ? "监控中" : "已停止")")

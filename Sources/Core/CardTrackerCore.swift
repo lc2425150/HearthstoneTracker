@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import AppKit
 
 /// 卡牌数据库来源
 enum CardDataSource: String, CaseIterable, Codable {
@@ -103,6 +104,9 @@ final class CardTrackerCore: ObservableObject {
         
         // 延迟加载数据（在 initializeData 中完成）
         setupSubscriptions()
+        
+        // HSReplay.net 集成
+        _ = HSReplayManager.shared
     }
     
     /// 后台初始化数据（不阻塞 UI 线程）
@@ -314,6 +318,13 @@ final class CardTrackerCore: ObservableObject {
         Task { @MainActor in
             loadMatchHistory()
             loadMatchHistory()
+        }
+        
+        // 自动上传对局到 HSReplay.net
+        Task { @MainActor in
+            if HSReplayManager.shared.isAuthenticated {
+                await HSReplayManager.shared.uploadMatch(m, playerDeckCode: m.deckCode)
+            }
         }
         currentMatch = nil
         resetMatch()

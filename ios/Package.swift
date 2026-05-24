@@ -1,17 +1,23 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 5.9
 import PackageDescription
 
 let package = Package(
     name: "HearthstoneTracker",
+    defaultLocalization: "zh-Hans",
     platforms: [
         .iOS(.v17)
     ],
-    dependencies: [],
+    products: [
+        .library(
+            name: "HearthstoneTracker",
+            targets: ["HearthstoneTracker"]
+        )
+    ],
     targets: [
         .target(
             name: "HearthstoneTracker",
             path: "HearthstoneTracker-iOS",
-            exclude: ["Info.plist"],
+            exclude: [],
             resources: [
                 .process("Assets.xcassets")
             ]
