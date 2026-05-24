@@ -600,6 +600,25 @@ struct SettingsView: View {
                 Slider(value: $overlayOpacity, in: 0.3...1.0) {
                     Text("透明度")
                 }
+                
+                Picker("卡牌尺寸", selection: $core.cardDisplaySize) {
+                    ForEach(CardDisplaySize.allCases, id: \.self) { size in
+                        Text(size.displayName).tag(size)
+                    }
+                }
+                .pickerStyle(.segmented)
+                
+                HStack {
+                    Text("稀有度颜色")
+                        .font(.caption)
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.gray).frame(width: 8, height: 8)
+                        Circle().fill(Color.blue).frame(width: 8, height: 8)
+                        Circle().fill(Color.purple).frame(width: 8, height: 8)
+                        Circle().fill(Color.orange).frame(width: 8, height: 8)
+                    }
+                }
             }
 
             Section("缓存管理") {

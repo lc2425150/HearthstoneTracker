@@ -4,7 +4,7 @@ import AppKit
 /// 悬浮窗视图：半透明悬浮层，展示牌库状态与对手信息
 struct OverlayView: View {
     @EnvironmentObject var core: CardTrackerCore
-    @State private var opacity: Double = 0.7
+    @State private var opacity: Double = 0.85
     @State private var selectedTab = 0
 
     var body: some View {
@@ -55,7 +55,7 @@ struct OverlayView: View {
                 bottomStatusBar
             }
         }
-        .frame(width: 320, height: 480)
+        .frame(width: 320, height: 420)
     }
 
     // MARK: - Header
@@ -227,20 +227,38 @@ struct PlayerDeckSection: View {
 struct OverlayCardRow: View {
     let card: Card
     let isInHand: Bool
+    @EnvironmentObject var core: CardTrackerCore
 
     var body: some View {
         HStack(spacing: 4) {
-            Text("(\(card.cost))")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(.white.opacity(0.6))
-                .frame(width: 20, alignment: .trailing)
+            // 稀有度颜色条
+            RoundedRectangle(cornerRadius: 1)
+                .fill(raritySwiftUIColor(card.rarityColor))
+                .frame(width: 3, height: core.cardDisplaySize.rowHeight - 4)
+            
+            // 费用
+            Text("\(card.cost)")
+                .font(.system(size: core.cardDisplaySize.fontSize, design: .monospaced))
+                .foregroundColor(.white)
+                .frame(width: core.cardDisplaySize.rowHeight - 4, height: core.cardDisplaySize.rowHeight - 4)
+                .background(raritySwiftUIColor(card.rarityColor).opacity(0.8))
+                .cornerRadius(3)
+            
+            // 名称
             Text(card.name)
-                .font(.system(size: 11))
-                .foregroundColor(isInHand ? .yellow.opacity(0.9) : .white.opacity(0.8))
+                .font(.system(size: core.cardDisplaySize.fontSize))
+                .foregroundColor(isInHand ? .yellow.opacity(0.9) : raritySwiftUIColor(card.rarityColor).opacity(0.9))
                 .lineLimit(1)
+            
             Spacer()
         }
         .padding(.vertical, 1)
+        .padding(.horizontal, 6)
+        .frame(height: core.cardDisplaySize.rowHeight + 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(raritySwiftUIColor(card.rarityColor).opacity(0.06))
+        )
     }
 }
 

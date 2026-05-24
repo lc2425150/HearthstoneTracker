@@ -2,13 +2,11 @@
 set -e
 cd "$(dirname "$0")"
 
-# 检测 Xcode 工具链
 XCODE_SWIFT="/Volumes/T7/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
 XCODE_SDK="/Volumes/T7/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
 
 if [ ! -f "$XCODE_SWIFT" ]; then
   echo "❌ 未找到 Xcode 工具链"
-  echo "   请确认 Xcode 在 /Volumes/T7/Applications/Xcode.app"
   exit 1
 fi
 
@@ -28,8 +26,9 @@ while IFS= read -r f; do
 done < <(find Sources -name "*.swift" -type f | sort)
 
 echo "📝 ${#SOURCES[@]} 个源文件"
-echo "⚙️  编译中..."
+echo "⚙️  编译中（并行模式）..."
 
+# 使用 -j 并行编译前端任务，-Onone 减少优化时间
 $XCODE_SWIFT \
   -o "$BUILD_DIR/$APP_NAME" \
   -target arm64-apple-macos14.0 \
@@ -37,6 +36,7 @@ $XCODE_SWIFT \
   -module-name "HearthstoneTracker" \
   -parse-as-library \
   -Onone \
+  -j 4 \
   -framework SwiftUI -framework AppKit -framework Foundation \
   -framework Combine -framework Vision \
   -framework UniformTypeIdentifiers -framework CoreGraphics \
@@ -55,7 +55,7 @@ DMG_PATH="$BUILD_DIR/$APP_NAME.dmg"
 echo "📦 打包 DMG..."
 rm -f "$DMG_PATH"
 hdiutil create -ov -format UDZO -volname "炉石记牌器" \
-  -srcfolder "$APP_BUNDLE" "$DMG_PATH"
+  -srcfolder "$APP_BUNDLE" "$DMG_PATH" 2>/dev/null
 
 echo ""
 echo "🎉 完成！"

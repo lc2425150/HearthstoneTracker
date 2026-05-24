@@ -52,6 +52,11 @@ final class CardTrackerCore: ObservableObject {
     @Published var isDataReady = false
     @Published var isUpdatingData = false
     @Published var lastUpdateResult: UpdateResult?
+    @Published var cardDisplaySize: CardDisplaySize {
+        didSet {
+            UserDefaults.standard.set(cardDisplaySize.rawValue, forKey: "cardDisplaySize")
+        }
+    }
     @Published var selectedDataSource: CardDataSource = .hearthstoneJSON {
         didSet {
             UserDefaults.standard.set(selectedDataSource.rawValue, forKey: "selectedDataSource")
@@ -83,7 +88,14 @@ final class CardTrackerCore: ObservableObject {
         eventPipeline = EventPipeline(database: cardDatabase)
         cardDataUpdater = CardDataUpdater(database: cardDatabase)
         
-        // 读取上次选择的数据库来源
+        // 读取卡牌尺寸和数据库来源设置
+        if let savedSize = UserDefaults.standard.string(forKey: "cardDisplaySize"),
+           let size = CardDisplaySize(rawValue: savedSize) {
+            cardDisplaySize = size
+        } else {
+            cardDisplaySize = .medium
+        }
+        
         if let saved = UserDefaults.standard.string(forKey: "selectedDataSource"),
            let source = CardDataSource(rawValue: saved) {
             selectedDataSource = source

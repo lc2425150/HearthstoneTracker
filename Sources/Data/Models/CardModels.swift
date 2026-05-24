@@ -124,3 +124,52 @@ class CardDatabase {
     
     func cards(for dbfIds: [Int]) -> [Card] { dbfIds.compactMap { card(for: $0) } }
 }
+
+
+// MARK: - 稀有度颜色
+
+extension Card {
+    var rarityColor: String {
+        switch rarity {
+        case "COMMON":    return "gray"
+        case "RARE":      return "blue"
+        case "EPIC":      return "purple"
+        case "LEGENDARY": return "orange"
+        default:          return "gray"
+        }
+    }
+}
+
+// MARK: - 卡牌尺寸
+
+enum CardDisplaySize: String, CaseIterable, Codable {
+    case small = "小"
+    case medium = "中"
+    case large = "大"
+    
+    var displayName: String { rawValue }
+    
+    var rowHeight: CGFloat {
+        switch self {
+        case .small:  return 22
+        case .medium: return 28
+        case .large:  return 36
+        }
+    }
+    
+    var fontSize: CGFloat {
+        switch self {
+        case .small:  return 10
+        case .medium: return 12
+        case .large:  return 14
+        }
+    }
+    
+    var overlayWidth: CGFloat {
+        switch self {
+        case .small:  return 260
+        case .medium: return 320
+        case .large:  return 380
+        }
+    }
+}

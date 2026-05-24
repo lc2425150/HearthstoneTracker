@@ -57,7 +57,7 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
 
     private func createOverlayWindow(core: CardTrackerCore) -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 480),
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 420),
             styleMask: [.borderless, .fullSizeContentView, .resizable],
             backing: .buffered,
             defer: false

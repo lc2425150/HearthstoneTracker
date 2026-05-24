@@ -2,14 +2,16 @@
 import PackageDescription
 
 let package = Package(
-    name: "HearthstoneTracker-iOS",
+    name: "HearthstoneTracker",
     platforms: [
-        .iOS("17.0")
+        .iOS(.v17)
     ],
+    dependencies: [],
     targets: [
         .target(
-            name: "HearthstoneTracker-iOS",
+            name: "HearthstoneTracker",
             path: "HearthstoneTracker-iOS",
+            exclude: ["Info.plist"],
             resources: [
                 .process("Assets.xcassets")
             ]

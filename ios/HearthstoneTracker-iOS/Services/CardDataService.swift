@@ -4,7 +4,7 @@ import SwiftData
 // MARK: - Card Data Service
 
 @MainActor
-final class CardDataService {
+final class CardDataService: ObservableObject {
     private let modelContext: ModelContext
     private let session: URLSession
 

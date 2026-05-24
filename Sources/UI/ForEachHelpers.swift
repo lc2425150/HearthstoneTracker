@@ -1,9 +1,10 @@
 import SwiftUI
 
-// MARK: - ForEach Workaround - 使用 Group + 手动生成视图避免 Swift 6.3 API 变更
+// MARK: - ForEach Workaround Views
 
 struct DiscoveredCardList: View {
     let cards: [DiscoveredCard]
+    @EnvironmentObject var core: CardTrackerCore
     
     var body: some View {
         VStack(spacing: 2) {
@@ -22,6 +23,7 @@ struct DiscoveredCardList: View {
 
 struct CardListSection: View {
     let cards: [Card]
+    @EnvironmentObject var core: CardTrackerCore
     
     var body: some View {
         VStack(spacing: 2) {
@@ -35,17 +37,26 @@ struct CardListSection: View {
 struct CardMiniRow: View {
     let card: Card
     var count: Int = 1
+    @EnvironmentObject var core: CardTrackerCore
     
     var body: some View {
-        HStack(spacing: 8) {
-            Text("(\(card.cost))")
-                .font(.caption.monospacedDigit())
-                .foregroundColor(.secondary)
-                .frame(width: 24, alignment: .trailing)
+        HStack(spacing: 6) {
+            // 费用
+            Text("\(card.cost)")
+                .font(.system(size: core.cardDisplaySize.fontSize, design: .monospaced))
+                .foregroundColor(.white)
+                .frame(width: core.cardDisplaySize.rowHeight - 4, height: core.cardDisplaySize.rowHeight - 4)
+                .background(raritySwiftUIColor(card.rarityColor))
+                .cornerRadius(4)
+            
+            // 卡牌名称
             Text(card.name)
-                .font(.callout)
+                .font(.system(size: core.cardDisplaySize.fontSize))
+                .foregroundColor(raritySwiftUIColor(card.rarityColor))
                 .lineLimit(1)
+            
             Spacer()
+            
             if count > 1 {
                 Text("×\(count)")
                     .font(.caption2)
@@ -53,10 +64,23 @@ struct CardMiniRow: View {
             }
         }
         .padding(.vertical, 2)
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 6)
+        .frame(height: core.cardDisplaySize.rowHeight + 4)
         .background(
             RoundedRectangle(cornerRadius: 4)
-                .fill(Color(nsColor: .textBackgroundColor).opacity(0.3))
+                .fill(raritySwiftUIColor(card.rarityColor).opacity(0.08))
         )
+    }
+}
+
+// MARK: - 稀有度颜色
+
+func raritySwiftUIColor(_ name: String) -> Color {
+    switch name {
+    case "gray":   return Color(nsColor: .systemGray)
+    case "blue":   return Color.blue
+    case "purple": return Color.purple
+    case "orange": return Color.orange
+    default:       return Color(nsColor: .systemGray)
     }
 }

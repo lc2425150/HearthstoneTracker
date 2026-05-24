@@ -44,7 +44,7 @@ enum DeckCodeParser {
             throw ParserError.invalidBase64
         }
 
-        var data = [UInt8](decodedData)
+        let data = [UInt8](decodedData)
         guard data.count >= 3 else {
             throw ParserError.invalidLength
         }
@@ -139,7 +139,7 @@ enum DeckCodeParser {
 
         let result = data.withUnsafeBytes { srcPtr in
             decompressed.withUnsafeMutableBytes { dstPtr in
-                guard let src = srcPtr.baseAddress, let dst = dstPtr.baseAddress else {
+                guard srcPtr.baseAddress != nil, dstPtr.baseAddress != nil else {
                     return -1
                 }
                 // 使用 libz
