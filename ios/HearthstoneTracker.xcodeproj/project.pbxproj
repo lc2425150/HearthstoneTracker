@@ -1,347 +1,350 @@
-// !$*UTF8*$!
 {
-	archiveVersion = 1;
-	classes = {
-	};
-	objectVersion = 56;
-	objects = {
-		8FA74811E2DA43DCA9F8A47C /* ContentView.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = 0D9C63771C2741AA9F258DF2 /* ContentView.swift */;
-		};
-		3BAFE24CBC0347EEAF08832B /* HearthstoneTrackerApp.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = B7F5181F33FC4140A2109310 /* HearthstoneTrackerApp.swift */;
-		};
-		C17DB8A3207C412E85167C8E /* CardModels.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = C0F5DFBFF3CB40CCBB05E785 /* CardModels.swift */;
-		};
-		930C9D6FF7E14B15992107B0 /* CardDataService.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = 89E475B0FD6B4C658C0218F6 /* CardDataService.swift */;
-		};
-		6343934E1E6F478387625F51 /* CardImageLoader.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = 89942A27DC5043239045153C /* CardImageLoader.swift */;
-		};
-		7B7D9007AA4248F0954F19FB /* OCRService.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = 3F24222A273149B885B68FD7 /* OCRService.swift */;
-		};
-		269B631E068140A29646D75D /* TrackingService.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = 7088BF723B054F0DBE811E08 /* TrackingService.swift */;
-		};
-		90A9ED30590448BC88442BD0 /* Constants.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = 3FC6E6469A454D0B9FD02D09 /* Constants.swift */;
-		};
-		6982982A37FB4523AFCC8EBE /* DeckCodeParser.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = 8FFA97A1E1384D809B82A1EC /* DeckCodeParser.swift */;
-		};
-		D7723E6C55FB45C28B27F0CF /* DeckDetailView.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = 47934D87D881431BB2544DAA /* DeckDetailView.swift */;
-		};
-		E3CACAE2962343AEA156E38B /* DeckLibraryView.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = 2C5257B61C9C45FE86323E14 /* DeckLibraryView.swift */;
-		};
-		501821479BAB4969AABFB74D /* LiveMatchView.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = A733A6ED4C1349658811912B /* LiveMatchView.swift */;
-		};
-		720A83F3A62644B9AF0FE31B /* SettingsView.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = DF425693EF544D23B194C199 /* SettingsView.swift */;
-		};
-		405799CB67E1425C8FED3DEA /* StatsView.swift in Sources */ = {
-			isa = PBXBuildFile;
-			fileRef = F1CAFA79348D453A8A476588 /* StatsView.swift */;
-		};
-		0D9C63771C2741AA9F258DF2 /* ContentView.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = ContentView.swift;
-			sourceTree = "<group>";
-		};
-		B7F5181F33FC4140A2109310 /* HearthstoneTrackerApp.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = HearthstoneTrackerApp.swift;
-			sourceTree = "<group>";
-		};
-		C0F5DFBFF3CB40CCBB05E785 /* CardModels.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Models/CardModels.swift;
-			sourceTree = "<group>";
-		};
-		89E475B0FD6B4C658C0218F6 /* CardDataService.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Services/CardDataService.swift;
-			sourceTree = "<group>";
-		};
-		89942A27DC5043239045153C /* CardImageLoader.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Services/CardImageLoader.swift;
-			sourceTree = "<group>";
-		};
-		3F24222A273149B885B68FD7 /* OCRService.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Services/OCRService.swift;
-			sourceTree = "<group>";
-		};
-		7088BF723B054F0DBE811E08 /* TrackingService.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Services/TrackingService.swift;
-			sourceTree = "<group>";
-		};
-		3FC6E6469A454D0B9FD02D09 /* Constants.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Utilities/Constants.swift;
-			sourceTree = "<group>";
-		};
-		8FFA97A1E1384D809B82A1EC /* DeckCodeParser.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Utilities/DeckCodeParser.swift;
-			sourceTree = "<group>";
-		};
-		47934D87D881431BB2544DAA /* DeckDetailView.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Views/DeckDetailView.swift;
-			sourceTree = "<group>";
-		};
-		2C5257B61C9C45FE86323E14 /* DeckLibraryView.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Views/DeckLibraryView.swift;
-			sourceTree = "<group>";
-		};
-		A733A6ED4C1349658811912B /* LiveMatchView.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Views/LiveMatchView.swift;
-			sourceTree = "<group>";
-		};
-		DF425693EF544D23B194C199 /* SettingsView.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Views/SettingsView.swift;
-			sourceTree = "<group>";
-		};
-		F1CAFA79348D453A8A476588 /* StatsView.swift */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.swift;
-			path = Views/StatsView.swift;
-			sourceTree = "<group>";
-		};
-		2C5BA3EC47D44A02BFAAED9E /* Info.plist */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
-			path = Info.plist;
-			sourceTree = "<group>";
-		};
-		77DBDF8F8B6044058D95AFAE /* HearthstoneTracker.app */ = {
-			isa = PBXFileReference;
-			explicitFileType = wrapper.application;
-			includeInIndex = 0;
-			path = HearthstoneTracker.app;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		F3FB4D00688C4A93A55D6EF5 = {
-			isa = PBXGroup;
-			children = (
-				0D9C63771C2741AA9F258DF2 /* ContentView.swift */,
-				B7F5181F33FC4140A2109310 /* HearthstoneTrackerApp.swift */,
-				C0F5DFBFF3CB40CCBB05E785 /* CardModels.swift */,
-				89E475B0FD6B4C658C0218F6 /* CardDataService.swift */,
-				89942A27DC5043239045153C /* CardImageLoader.swift */,
-				3F24222A273149B885B68FD7 /* OCRService.swift */,
-				7088BF723B054F0DBE811E08 /* TrackingService.swift */,
-				3FC6E6469A454D0B9FD02D09 /* Constants.swift */,
-				8FFA97A1E1384D809B82A1EC /* DeckCodeParser.swift */,
-				47934D87D881431BB2544DAA /* DeckDetailView.swift */,
-				2C5257B61C9C45FE86323E14 /* DeckLibraryView.swift */,
-				A733A6ED4C1349658811912B /* LiveMatchView.swift */,
-				DF425693EF544D23B194C199 /* SettingsView.swift */,
-				F1CAFA79348D453A8A476588 /* StatsView.swift */,
-				2C5BA3EC47D44A02BFAAED9E /* Info.plist */,
-				77DBDF8F8B6044058D95AFAE /* HearthstoneTracker.app */,
-			);
-			path = HearthstoneTracker-iOS;
-			sourceTree = "<group>";
-		};
-		372EA9790B1446CF9B1DCACB = {
-			isa = PBXGroup;
-			children = (
-				F3FB4D00688C4A93A55D6EF5 /* HearthstoneTracker-iOS */,
-			);
-			sourceTree = "<group>";
-		};
-		92A1EDABBC824E2FB6160AAD /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				8FA74811E2DA43DCA9F8A47C /* ContentView.swift in Sources */,
-				3BAFE24CBC0347EEAF08832B /* HearthstoneTrackerApp.swift in Sources */,
-				C17DB8A3207C412E85167C8E /* CardModels.swift in Sources */,
-				930C9D6FF7E14B15992107B0 /* CardDataService.swift in Sources */,
-				6343934E1E6F478387625F51 /* CardImageLoader.swift in Sources */,
-				7B7D9007AA4248F0954F19FB /* OCRService.swift in Sources */,
-				269B631E068140A29646D75D /* TrackingService.swift in Sources */,
-				90A9ED30590448BC88442BD0 /* Constants.swift in Sources */,
-				6982982A37FB4523AFCC8EBE /* DeckCodeParser.swift in Sources */,
-				D7723E6C55FB45C28B27F0CF /* DeckDetailView.swift in Sources */,
-				E3CACAE2962343AEA156E38B /* DeckLibraryView.swift in Sources */,
-				501821479BAB4969AABFB74D /* LiveMatchView.swift in Sources */,
-				720A83F3A62644B9AF0FE31B /* SettingsView.swift in Sources */,
-				405799CB67E1425C8FED3DEA /* StatsView.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		79460FE63ACC40E1AEAAD211 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		164A1B40E8D44D628EE1EA34 /* HearthstoneTracker */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 7374077991FA4DB6911B03C2 /* Build configuration list for PBXNativeTarget "HearthstoneTracker" */;
-			buildPhases = (
-				92A1EDABBC824E2FB6160AAD /* Sources */,
-				79460FE63ACC40E1AEAAD211 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = HearthstoneTracker;
-			productName = HearthstoneTracker;
-			productReference = 77DBDF8F8B6044058D95AFAE /* HearthstoneTracker.app */;
-			productType = "com.apple.product-type.application";
-		};
-		A52B274829314A7D95699715 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.hearthstonetracker.ios;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1,2;
-			};
-			name = Debug;
-		};
-		41A4D71CBA61414B88B10A6E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ENABLE_MODULES = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.hearthstonetracker.ios;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1,2;
-			};
-			name = Release;
-		};
-		F190660FAF5545FDA0754285 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = HearthstoneTracker-iOS/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hearthstonetracker.ios;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1,2;
-			};
-			name = Debug;
-		};
-		1EFF0E104189494CBA3426FA /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = HearthstoneTracker-iOS/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hearthstonetracker.ios;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1,2;
-			};
-			name = Release;
-		};
-		64CCD3FE15A54E3B9A6EE24B /* Build configuration list for PBXProject "HearthstoneTracker" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A52B274829314A7D95699715 /* Debug */,
-				41A4D71CBA61414B88B10A6E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		7374077991FA4DB6911B03C2 /* Build configuration list for PBXNativeTarget "HearthstoneTracker" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				F190660FAF5545FDA0754285 /* Debug */,
-				1EFF0E104189494CBA3426FA /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		EE11DBB911024243A896E360 /* Project object */ = {
-			isa = PBXProject;
-			attributes = {
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2605;
-				LastUpgradeCheck = 2605;
-			};
-			buildConfigurationList = 64CCD3FE15A54E3B9A6EE24B /* Build configuration list for PBXProject "HearthstoneTracker" */;
-			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = "zh-Hans";
-			hasScannedForEncodings = 0;
-			knownRegions = (
-				"zh-Hans",
-				en,
-				Base,
-			);
-			mainGroup = 372EA9790B1446CF9B1DCACB;
-			productRefGroup = F3FB4D00688C4A93A55D6EF5 /* HearthstoneTracker-iOS */;
-			projectDirPath = "";
-			projectRoot = "";
-			targets = (
-				164A1B40E8D44D628EE1EA34 /* HearthstoneTracker */,
-			);
-		};
-	};
-	rootObject = EE11DBB911024243A896E360 /* Project object */;
+  "archiveVersion": "1",
+  "classes": {},
+  "objectVersion": "56",
+  "objects": {
+    "C33F2F9A8E894A62A74A22DD": {
+      "isa": "PBXBuildFile",
+      "fileRef": "C28D33974B474104B4AE4F55"
+    },
+    "F0E9EC5A27BD4450A37A3DD6": {
+      "isa": "PBXBuildFile",
+      "fileRef": "891D375BD120407EA8A787F9"
+    },
+    "7AEAB92DC23E4D479F18C5FC": {
+      "isa": "PBXBuildFile",
+      "fileRef": "79883BE587B04F5BA0FCD622"
+    },
+    "C646D9CD45A04D30878FE174": {
+      "isa": "PBXBuildFile",
+      "fileRef": "515FB000815446FA94B9FF15"
+    },
+    "2EA26B81F7574987A713A450": {
+      "isa": "PBXBuildFile",
+      "fileRef": "AA2F21BAF1ED4DE6AEC45953"
+    },
+    "4638AE92C3BD4C8E8EFE9835": {
+      "isa": "PBXBuildFile",
+      "fileRef": "2C493B3F1FFD4BC99FAC5B15"
+    },
+    "1C16E443403A495FBB6C454D": {
+      "isa": "PBXBuildFile",
+      "fileRef": "BBE50443CF1846E3A19FB439"
+    },
+    "12640D7D784647888EAE1CD5": {
+      "isa": "PBXBuildFile",
+      "fileRef": "E338A415C1CD49F2A9C27F0C"
+    },
+    "88FB88EBB22D4FEEA13E4BCB": {
+      "isa": "PBXBuildFile",
+      "fileRef": "7AE89B36526540118D36EBC1"
+    },
+    "47405643EA41418C94E792E5": {
+      "isa": "PBXBuildFile",
+      "fileRef": "C6C7855786674CA2A94B8814"
+    },
+    "AF01ABE0404846A3AEDBAA4C": {
+      "isa": "PBXBuildFile",
+      "fileRef": "ACC6646F18794476B09E56C3"
+    },
+    "F5B9B1239C4C4AF08BAE4D36": {
+      "isa": "PBXBuildFile",
+      "fileRef": "15459AA8AC8645EA89D004F1"
+    },
+    "46D3791D97A9443A8C25307E": {
+      "isa": "PBXBuildFile",
+      "fileRef": "96C0192421644AD7BA6C1C7D"
+    },
+    "21254D8B25C3454DB203E2D3": {
+      "isa": "PBXBuildFile",
+      "fileRef": "88FE1EBC252D4C949019AC8C"
+    },
+    "C28D33974B474104B4AE4F55": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "ContentView.swift",
+      "sourceTree": "<group>"
+    },
+    "891D375BD120407EA8A787F9": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "HearthstoneTrackerApp.swift",
+      "sourceTree": "<group>"
+    },
+    "79883BE587B04F5BA0FCD622": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Models/CardModels.swift",
+      "sourceTree": "<group>"
+    },
+    "515FB000815446FA94B9FF15": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Services/CardDataService.swift",
+      "sourceTree": "<group>"
+    },
+    "AA2F21BAF1ED4DE6AEC45953": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Services/CardImageLoader.swift",
+      "sourceTree": "<group>"
+    },
+    "2C493B3F1FFD4BC99FAC5B15": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Services/OCRService.swift",
+      "sourceTree": "<group>"
+    },
+    "BBE50443CF1846E3A19FB439": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Services/TrackingService.swift",
+      "sourceTree": "<group>"
+    },
+    "E338A415C1CD49F2A9C27F0C": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Utilities/Constants.swift",
+      "sourceTree": "<group>"
+    },
+    "7AE89B36526540118D36EBC1": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Utilities/DeckCodeParser.swift",
+      "sourceTree": "<group>"
+    },
+    "C6C7855786674CA2A94B8814": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Views/DeckDetailView.swift",
+      "sourceTree": "<group>"
+    },
+    "ACC6646F18794476B09E56C3": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Views/DeckLibraryView.swift",
+      "sourceTree": "<group>"
+    },
+    "15459AA8AC8645EA89D004F1": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Views/LiveMatchView.swift",
+      "sourceTree": "<group>"
+    },
+    "96C0192421644AD7BA6C1C7D": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Views/SettingsView.swift",
+      "sourceTree": "<group>"
+    },
+    "88FE1EBC252D4C949019AC8C": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "path": "Views/StatsView.swift",
+      "sourceTree": "<group>"
+    },
+    "25BBE27D0ED24B98846DD4FC": {
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "text.plist.xml",
+      "path": "Info.plist",
+      "sourceTree": "<group>"
+    },
+    "757F8710F85A4882A90BFFB8": {
+      "isa": "PBXFileReference",
+      "explicitFileType": "wrapper.application",
+      "includeInIndex": 0,
+      "path": "HearthstoneTracker.app",
+      "sourceTree": "BUILT_PRODUCTS_DIR"
+    },
+    "29A124ED3C13431A8533DBF1": {
+      "isa": "PBXGroup",
+      "children": [
+        "C28D33974B474104B4AE4F55",
+        "891D375BD120407EA8A787F9",
+        "79883BE587B04F5BA0FCD622",
+        "515FB000815446FA94B9FF15",
+        "AA2F21BAF1ED4DE6AEC45953",
+        "2C493B3F1FFD4BC99FAC5B15",
+        "BBE50443CF1846E3A19FB439",
+        "E338A415C1CD49F2A9C27F0C",
+        "7AE89B36526540118D36EBC1",
+        "C6C7855786674CA2A94B8814",
+        "ACC6646F18794476B09E56C3",
+        "15459AA8AC8645EA89D004F1",
+        "96C0192421644AD7BA6C1C7D",
+        "88FE1EBC252D4C949019AC8C",
+        "25BBE27D0ED24B98846DD4FC",
+        "757F8710F85A4882A90BFFB8"
+      ],
+      "path": "HearthstoneTracker-iOS",
+      "sourceTree": "<group>"
+    },
+    "6EDAD71D36AC457189FE406C": {
+      "isa": "PBXGroup",
+      "children": [
+        "29A124ED3C13431A8533DBF1"
+      ],
+      "sourceTree": "<group>"
+    },
+    "F7AD3E56905C46719C9B7402": {
+      "isa": "PBXSourcesBuildPhase",
+      "buildActionMask": 2147483647,
+      "files": [
+        "C33F2F9A8E894A62A74A22DD",
+        "F0E9EC5A27BD4450A37A3DD6",
+        "7AEAB92DC23E4D479F18C5FC",
+        "C646D9CD45A04D30878FE174",
+        "2EA26B81F7574987A713A450",
+        "4638AE92C3BD4C8E8EFE9835",
+        "1C16E443403A495FBB6C454D",
+        "12640D7D784647888EAE1CD5",
+        "88FB88EBB22D4FEEA13E4BCB",
+        "47405643EA41418C94E792E5",
+        "AF01ABE0404846A3AEDBAA4C",
+        "F5B9B1239C4C4AF08BAE4D36",
+        "46D3791D97A9443A8C25307E",
+        "21254D8B25C3454DB203E2D3"
+      ],
+      "runOnlyForDeploymentPostprocessing": 0
+    },
+    "631E6D125E8B4D0C950EB946": {
+      "isa": "PBXResourcesBuildPhase",
+      "buildActionMask": 2147483647,
+      "files": [],
+      "runOnlyForDeploymentPostprocessing": 0
+    },
+    "23C57350763646F2815F427D": {
+      "isa": "PBXNativeTarget",
+      "buildConfigurationList": "2D9557ED871847FABFFB61B7",
+      "buildPhases": [
+        "F7AD3E56905C46719C9B7402",
+        "631E6D125E8B4D0C950EB946"
+      ],
+      "buildRules": [],
+      "dependencies": [],
+      "name": "HearthstoneTracker",
+      "productName": "HearthstoneTracker",
+      "productReference": "757F8710F85A4882A90BFFB8",
+      "productType": "com.apple.product-type.application"
+    },
+    "BC5DF47B2E17406881270487": {
+      "isa": "XCBuildConfiguration",
+      "buildSettings": {
+        "ALWAYS_SEARCH_USER_PATHS": "NO",
+        "CLANG_ENABLE_MODULES": "YES",
+        "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
+        "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.hearthstonetracker.ios",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "1,2",
+        "CODE_SIGN_STYLE": "Automatic",
+        "SDKROOT": "iphoneos",
+        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator"
+      },
+      "name": "Debug"
+    },
+    "DB8377AD687947FAAAD93688": {
+      "isa": "XCBuildConfiguration",
+      "buildSettings": {
+        "ALWAYS_SEARCH_USER_PATHS": "NO",
+        "CLANG_ENABLE_MODULES": "YES",
+        "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
+        "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.hearthstonetracker.ios",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "1,2",
+        "SDKROOT": "iphoneos",
+        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator"
+      },
+      "name": "Release"
+    },
+    "13F622E0B9614579846E99CA": {
+      "isa": "XCBuildConfiguration",
+      "buildSettings": {
+        "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+        "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
+        "CODE_SIGN_STYLE": "Automatic",
+        "CURRENT_PROJECT_VERSION": "1",
+        "GENERATE_INFOPLIST_FILE": "NO",
+        "INFOPLIST_FILE": "HearthstoneTracker-iOS/Info.plist",
+        "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
+        "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
+        "MARKETING_VERSION": "1.0.0",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.hearthstonetracker.ios",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "1,2",
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "DEBUG",
+        "SDKROOT": "iphoneos",
+        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator"
+      },
+      "name": "Debug"
+    },
+    "9774BF0BEFF44016AA1BD5FA": {
+      "isa": "XCBuildConfiguration",
+      "buildSettings": {
+        "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+        "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
+        "CODE_SIGN_STYLE": "Automatic",
+        "CURRENT_PROJECT_VERSION": "1",
+        "GENERATE_INFOPLIST_FILE": "NO",
+        "INFOPLIST_FILE": "HearthstoneTracker-iOS/Info.plist",
+        "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
+        "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
+        "MARKETING_VERSION": "1.0.0",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.hearthstonetracker.ios",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "1,2",
+        "SDKROOT": "iphoneos",
+        "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator"
+      },
+      "name": "Release"
+    },
+    "1889D981A32E4CCFBA8BCE4F": {
+      "isa": "XCConfigurationList",
+      "buildConfigurations": [
+        "BC5DF47B2E17406881270487",
+        "DB8377AD687947FAAAD93688"
+      ],
+      "defaultConfigurationIsVisible": 0,
+      "defaultConfigurationName": "Release"
+    },
+    "2D9557ED871847FABFFB61B7": {
+      "isa": "XCConfigurationList",
+      "buildConfigurations": [
+        "13F622E0B9614579846E99CA",
+        "9774BF0BEFF44016AA1BD5FA"
+      ],
+      "defaultConfigurationIsVisible": 0,
+      "defaultConfigurationName": "Release"
+    },
+    "07D00FAADC4E48E39957B76E": {
+      "isa": "PBXProject",
+      "attributes": {
+        "BuildIndependentTargetsInParallel": 1,
+        "LastSwiftUpdateCheck": 2605,
+        "LastUpgradeCheck": 2605
+      },
+      "buildConfigurationList": "1889D981A32E4CCFBA8BCE4F",
+      "compatibilityVersion": "Xcode 14.0",
+      "developmentRegion": "zh-Hans",
+      "hasScannedForEncodings": 0,
+      "knownRegions": [
+        "zh-Hans",
+        "en",
+        "Base"
+      ],
+      "mainGroup": "6EDAD71D36AC457189FE406C",
+      "productRefGroup": "29A124ED3C13431A8533DBF1",
+      "projectDirPath": "",
+      "projectRoot": "",
+      "targets": [
+        "23C57350763646F2815F427D"
+      ]
+    }
+  },
+  "rootObject": "07D00FAADC4E48E39957B76E"
 }

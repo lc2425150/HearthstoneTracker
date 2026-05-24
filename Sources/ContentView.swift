@@ -649,6 +649,9 @@ struct SettingsView: View {
             }
 
             Section("悬浮窗") {
+                Toggle("窗口锁定（鼠标穿透）", isOn: $core.windowsLocked)
+                    .help("锁定后鼠标点击穿透到游戏，解锁后可拖拽悬浮窗")
+                
                 Slider(value: $overlayOpacity, in: 0.3...1.0) {
                     Text("透明度")
                 }

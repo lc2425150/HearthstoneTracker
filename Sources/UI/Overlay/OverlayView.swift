@@ -89,6 +89,15 @@ struct OverlayView: View {
                 }
                 .help("增加透明度")
 
+                // 锁定/解锁按钮
+                Button(action: {
+                    core.windowsLocked.toggle()
+                }) {
+                    Image(systemName: core.windowsLocked ? "lock.fill" : "lock.open")
+                        .font(.system(size: 10))
+                }
+                .help(core.windowsLocked ? "解锁（可拖拽）" : "锁定（鼠标穿透）")
+
                 Button(action: { core.toggleOverlay() }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 10))

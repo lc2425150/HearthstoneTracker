@@ -3,6 +3,11 @@ import AppKit
 
 /// 悬浮窗控制器：管理透明悬浮窗口，贴合炉石传说窗口
 final class OverlayWindowController: NSObject, @unchecked Sendable {
+    
+    func updateLockState(locked: Bool) {
+        window?.ignoresMouseEvents = locked
+        window?.isMovableByWindowBackground = !locked
+    }
     static let shared = OverlayWindowController()
     private var window: NSWindow?
     private var positionTimer: Timer?
@@ -66,7 +71,9 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
         window.level = .floating
         window.isOpaque = false
         window.backgroundColor = NSColor.clear
-        window.ignoresMouseEvents = false
+        let initialLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        window.ignoresMouseEvents = initialLocked
+        window.isMovableByWindowBackground = !initialLocked
         window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         window.hasShadow = true
         window.isMovableByWindowBackground = true

@@ -77,6 +77,15 @@ final class CardTrackerCore: ObservableObject {
     // MARK: - UI State
 
     @Published var isOverlayVisible = false
+    @Published var windowsLocked = true {
+        didSet {
+            UserDefaults.standard.set(windowsLocked, forKey: "windowsLocked")
+            // 立即更新悬浮窗状态
+            if isOverlayVisible {
+                OverlayWindowController.shared.updateLockState(locked: windowsLocked)
+            }
+        }
+    }
     @Published var isTracking = false
 
     private var cancellables = Set<AnyCancellable>()
@@ -90,6 +99,8 @@ final class CardTrackerCore: ObservableObject {
         cardDataUpdater = CardDataUpdater(database: cardDatabase)
         
         // 读取卡牌尺寸和数据库来源设置
+        windowsLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        
         if let savedSize = UserDefaults.standard.string(forKey: "cardDisplaySize"),
            let size = CardDisplaySize(rawValue: savedSize) {
             cardDisplaySize = size
