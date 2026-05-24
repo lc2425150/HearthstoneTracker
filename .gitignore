@@ -25,3 +25,9 @@ DerivedData/
 .DS_Store
 *.swp
 *.lock
+
+# iOS
+ios/*.xcuserdata
+ios/DerivedData/
+ios/Pods/
+ios/*.xcworkspace
