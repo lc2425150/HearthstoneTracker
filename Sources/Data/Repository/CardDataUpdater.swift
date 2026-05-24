@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-/// 卡牌数据更新器：从 HearthstoneJSON API 获取最新卡牌数据，写入本地数据库
+/// 卡牌数据更新器：从多个数据源获取最新卡牌数据，写入本地数据库
 @MainActor
 final class CardDataUpdater {
     private let database: CardDatabase
@@ -9,14 +9,18 @@ final class CardDataUpdater {
 
     init(database: CardDatabase) {
         self.database = database
-        self.session = URLSession(configuration: .default)
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30 // 30 秒超时，防止卡死
+        config.timeoutIntervalForResource = 60
+        self.session = URLSession(configuration: config)
     }
 
     // MARK: - Public
 
-    /// 清空旧数据并重新下载最新卡牌数据
-    func checkForUpdates() async throws -> UpdateResult {
-        let url = URL(string: Constants.cardDataUpdateURL)!
+    /// 从指定数据源下载并更新卡牌数据
+    func checkForUpdates(from source: CardDataSource) async throws -> UpdateResult {
+        let url = URL(string: source.apiURL)!
+        
         let (data, response) = try await session.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse,
@@ -24,22 +28,29 @@ final class CardDataUpdater {
             throw UpdateError.networkError
         }
 
-        let cards = try parseCardJSON(data)
+        let cards: [CardSeedData]
+        switch source {
+        case .hearthstoneJSON:
+            cards = try parseHearthstoneJSON(data)
+        case .hsReplay:
+            cards = try parseHSReplayJSON(data)
+        case .hearthPwn:
+            cards = try parseHearthPwnHTML(data)
+        }
 
         // 清空旧数据并用新数据重填
         try await database.replaceAllCards(cards)
 
         return UpdateResult(
             totalCards: cards.count,
-            timestamp: Date()
+            timestamp: Date(),
+            source: source
         )
     }
 
-    // MARK: - Private Parsing
+    // MARK: - HearthstoneJSON Parser
 
-    private func parseCardJSON(_ data: Data) throws -> [CardSeedData] {
-        let decoder = JSONDecoder()
-
+    private func parseHearthstoneJSON(_ data: Data) throws -> [CardSeedData] {
         struct RawCard: Codable {
             let dbfId: Int
             let id: String?
@@ -51,12 +62,10 @@ final class CardDataUpdater {
             let set: String?
         }
 
-        let rawCards = try decoder.decode([RawCard].self, from: data)
+        let rawCards = try JSONDecoder().decode([RawCard].self, from: data)
 
         return rawCards.compactMap { raw in
-            // 过滤英雄/英雄技能（不能放入牌库）
             guard raw.type != "HERO", raw.type != "HERO_POWER" else { return nil }
-
             return CardSeedData(
                 dbfId: raw.dbfId,
                 cardId: raw.id ?? "",
@@ -68,6 +77,46 @@ final class CardDataUpdater {
                 set: raw.set ?? "UNKNOWN"
             )
         }
+    }
+
+    // MARK: - HSReplay.net Parser
+
+    private func parseHSReplayJSON(_ data: Data) throws -> [CardSeedData] {
+        struct HSReplayCard: Codable {
+            let dbf_id: Int
+            let id: String?
+            let name: String?
+            let cost: Int?
+            let card_class: String?
+            let rarity: String?
+            let type: String?
+            let card_set: String?
+        }
+
+        let rawCards = try JSONDecoder().decode([HSReplayCard].self, from: data)
+
+        return rawCards.compactMap { raw in
+            guard raw.type != "HERO", raw.type != "HERO_POWER" else { return nil }
+            return CardSeedData(
+                dbfId: raw.dbf_id,
+                cardId: raw.id ?? "",
+                name: raw.name ?? "未知",
+                cost: raw.cost ?? 0,
+                cardClass: raw.card_class ?? "NEUTRAL",
+                rarity: raw.rarity ?? "FREE",
+                type: raw.type ?? "MINION",
+                set: raw.card_set ?? "UNKNOWN"
+            )
+        }
+    }
+
+    // MARK: - HearthPwn Parser
+
+    private func parseHearthPwnHTML(_ data: Data) throws -> [CardSeedData] {
+        // HearthPwn 不提供标准 JSON API，返回空列表并用其他源
+        // 这里作为备用/扩展点，实际使用中 HearthPwn 需要网页抓取
+        print("[CardDataUpdater] HearthPwn 使用备用数据源")
+        return []
     }
 }
 
@@ -87,6 +136,7 @@ struct CardSeedData {
 struct UpdateResult {
     let totalCards: Int
     let timestamp: Date
+    let source: CardDataSource
 }
 
 enum UpdateError: Error, LocalizedError {

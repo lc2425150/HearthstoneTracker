@@ -1,18 +1,28 @@
 import SwiftUI
+import Combine
 
 @main
 @MainActor
 struct HearthstoneTrackerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var core = CardTrackerCore()
+    @State private var isLoadingData = false
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(isLoadingData: $isLoadingData)
                 .environmentObject(core)
                 .frame(minWidth: 420, minHeight: 520)
                 .onAppear {
-                    Task { await core.checkCardDataUpdate() }
+                    // 后台初始化数据，不阻塞 UI
+                    isLoadingData = true
+                    Task.detached(priority: .background) {
+                        await core.initializeData()
+                        await MainActor.run { isLoadingData = false }
+                    }
+                }
+                .onReceive(core.$isDataReady) { ready in
+                    if ready { isLoadingData = false }
                 }
         }
         .windowResizability(.contentSize)
@@ -22,14 +32,9 @@ struct HearthstoneTrackerApp: App {
             deckCommands
             AppMenuCommands()
         }
-
-        // 悬浮窗场景
-        Settings {
-            EmptyView()
-        }
     }
 
-    @CommandsBuilder
+    @CommandBuilder
     private var deckCommands: some Commands {
         CommandGroup(replacing: .newItem) {
             Button("导入卡组码") {
@@ -85,10 +90,10 @@ struct HearthstoneTrackerApp: App {
     }
 }
 
-/// Help 菜单命令（独立结构体以支持 @CommandsBuilder）
+/// Help 菜单命令
 struct AppMenuCommands: Commands {
     var body: some Commands {
-        CommandGroup(replacing: .help) {
+        CommandGroup(before: .help) {
             Button("关于炉石记牌器") {
                 NSApplication.shared.orderFrontStandardAboutPanel(
                     options: [

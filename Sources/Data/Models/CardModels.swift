@@ -1,8 +1,6 @@
 import Foundation
 import SwiftData
 
-// MARK: - Card Model
-
 @Model
 final class Card {
     var dbfId: Int
@@ -13,7 +11,7 @@ final class Card {
     var rarity: String
     var type: String
     var set: String
-
+    
     init(dbfId: Int, cardId: String = "", name: String, cost: Int, cardClass: String, rarity: String, type: String, set: String) {
         self.dbfId = dbfId
         self.cardId = cardId
@@ -27,10 +25,8 @@ final class Card {
 }
 
 extension Card: Identifiable {
-    public var id: Int { dbfId }
+    var id: Int { dbfId }
 }
-
-// MARK: - Deck Models
 
 struct TrackedDeck {
     let deckCode: String
@@ -40,11 +36,8 @@ struct TrackedDeck {
     var remainingOriginal: [Card]
     var playedOriginal: [Card] = []
     var handOriginal: [Card] = []
-
     var remainingOriginalCount: Int { remainingOriginal.count }
     var totalOriginalCount: Int { originalCards.count }
-    var playedOriginalCount: Int { playedOriginal.count }
-    var handOriginalCount: Int { handOriginal.count }
 }
 
 struct DiscoveredCard: Identifiable {
@@ -53,14 +46,6 @@ struct DiscoveredCard: Identifiable {
     let source: DiscoverySource
     let timestamp: Date
     var isPlayed = false
-
-    var sourceLabel: String {
-        switch source {
-        case .discover:  return "发现"
-        case .random:    return "随机"
-        case .generated(let by): return "来自 \(by)"
-        }
-    }
 }
 
 enum DiscoverySource: Equatable {
@@ -71,36 +56,25 @@ enum DiscoverySource: Equatable {
 
 enum HeroClass: String, CaseIterable {
     case druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior, demonHunter, deathKnight, unknown
-
     var displayName: String {
         switch self {
-        case .druid:        return "德鲁伊"
-        case .hunter:       return "猎人"
-        case .mage:         return "法师"
-        case .paladin:      return "圣骑士"
-        case .priest:       return "牧师"
-        case .rogue:        return "潜行者"
-        case .shaman:       return "萨满"
-        case .warlock:      return "术士"
-        case .warrior:      return "战士"
-        case .demonHunter:  return "恶魔猎手"
-        case .deathKnight:  return "死亡骑士"
-        case .unknown:      return "未知"
+        case .druid: return "德鲁伊"
+        case .hunter: return "猎人"
+        case .mage: return "法师"
+        case .paladin: return "圣骑士"
+        case .priest: return "牧师"
+        case .rogue: return "潜行者"
+        case .shaman: return "萨满"
+        case .warlock: return "术士"
+        case .warrior: return "战士"
+        case .demonHunter: return "恶魔猎手"
+        case .deathKnight: return "死亡骑士"
+        case .unknown: return "未知"
         }
     }
 }
 
-// MARK: - Event Models
-
-enum CardEventType {
-    case draw
-    case play
-    case discard
-    case destroy
-    case discover
-    case create
-    case secret
-}
+enum CardEventType { case draw, play, discard, destroy, discover, create, secret }
 
 struct CardEvent {
     let type: CardEventType
@@ -111,45 +85,31 @@ struct CardEvent {
     let metadata: [String: Any]?
 }
 
-enum Player {
-    case player, opponent
-}
+enum Player { case player, opponent }
 
-// MARK: - Database
-
+// 注册所有模型的容器
 @MainActor
 class CardDatabase {
     let modelContainer: ModelContainer
-
+    let allModels: [any PersistentModel.Type] = [Card.self, MatchRecord.self, SavedDeck.self]
+    
     init() {
         do {
-            modelContainer = try ModelContainer(for: Card.self)
+            modelContainer = try ModelContainer(for: Card.self, MatchRecord.self, SavedDeck.self)
         } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+            fatalError("CardDatabase 初始化失败: \(error)")
         }
     }
-
+    
     func card(for dbfId: Int) -> Card? {
-        let descriptor = FetchDescriptor<Card>(predicate: #Predicate { $0.dbfId == dbfId })
-        do {
-            return try modelContainer.mainContext.fetch(descriptor).first
-        } catch {
-            print("[CardDatabase] Fetch error: \(error)")
-            return nil
-        }
+        let desc = FetchDescriptor<Card>(predicate: #Predicate { $0.dbfId == dbfId })
+        return try? modelContainer.mainContext.fetch(desc).first
     }
-
+    
     func card(forCardId cardId: String) -> Card? {
-        let descriptor = FetchDescriptor<Card>(predicate: #Predicate { $0.cardId == cardId })
-        do {
-            return try modelContainer.mainContext.fetch(descriptor).first
-        } catch {
-            print("[CardDatabase] Fetch error: \(error)")
-            return nil
-        }
+        let desc = FetchDescriptor<Card>(predicate: #Predicate { $0.cardId == cardId })
+        return try? modelContainer.mainContext.fetch(desc).first
     }
-
-    func cards(for dbfIds: [Int]) -> [Card] {
-        dbfIds.compactMap { card(for: $0) }
-    }
+    
+    func cards(for dbfIds: [Int]) -> [Card] { dbfIds.compactMap { card(for: $0) } }
 }

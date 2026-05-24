@@ -3,12 +3,44 @@ import AppKit
 
 struct ContentView: View {
     @EnvironmentObject var core: CardTrackerCore
+    @Binding var isLoadingData: Bool
     @State private var selectedTab = 0
 
     var body: some View {
         VStack(spacing: 0) {
-            // 顶部游戏状态栏
-            StatusView()
+            // 顶部游戏状态栏 + 悬浮窗按钮
+            HStack {
+                StatusView()
+                Spacer()
+                // 悬浮窗切换按钮（突出显示）
+                Button(action: {
+                    OverlayWindowController.shared.toggle(core: core)
+                    core.isOverlayVisible = OverlayWindowController.shared.isVisible
+                }) {
+                    Label("悬浮窗", systemImage: core.isOverlayVisible ? "rectangle.on.rectangle" : "rectangle")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(core.isOverlayVisible ? .blue : .gray)
+                .controlSize(.small)
+                .padding(.trailing, 8)
+            }
+            .padding(.horizontal)
+            .padding(.top, 4)
+            
+            // 加载指示器
+            if isLoadingData {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                    Text("正在初始化卡牌数据...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 2)
+            }
 
             TabView(selection: $selectedTab) {
                 DeckView()
@@ -38,7 +70,11 @@ struct ContentView: View {
         }
         .frame(minWidth: 420, minHeight: 520)
         .task {
-            await core.checkCardDataUpdate()
+            if !core.isDataReady {
+                isLoadingData = true
+                await core.initializeData()
+                isLoadingData = false
+            }
         }
     }
 }
@@ -57,22 +93,48 @@ struct DeckView: View {
                 emptyDeckView
             }
 
-            // 手动输入卡组码
+            // 手动输入卡组码（无字数限制，使用 TextEditor）
             VStack(spacing: 8) {
                 Divider()
-                HStack {
-                    TextField("粘贴卡组码...", text: $manualDeckCode)
-                        .textFieldStyle(.roundedBorder)
-                    Button("导入") {
-                        core.importDeck(from: manualDeckCode)
-                        manualDeckCode = ""
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("粘贴卡组码:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    TextEditor(text: $manualDeckCode)
+                        .font(.body.monospaced())
+                        .frame(minHeight: 40, maxHeight: 80)
+                        .border(Color(nsColor: .separatorColor), width: 0.5)
+                        .cornerRadius(4)
+                    
+                    HStack {
+                        if !core.isDataReady {
+                            ProgressView()
+                                .scaleEffect(0.5)
+                            Text("卡牌数据加载中...")
+                                .font(.caption2)
+                                .foregroundColor(.orange)
+                        }
+                        Spacer()
+                        Button("导入") {
+                            core.importDeck(from: manualDeckCode)
+                            manualDeckCode = ""
+                        }
+                        .disabled(manualDeckCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !core.isDataReady)
                     }
-                    .disabled(manualDeckCode.isEmpty)
                 }
                 .padding(.horizontal)
             }
 
             Spacer()
+
+            // 错误提示
+            if let error = core.deckImportError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.horizontal)
+            }
 
             // 数据状态栏
             dataStatusBar
@@ -121,14 +183,14 @@ struct DeckView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     if !deck.originalCards.isEmpty {
                         SectionHeader(title: "原卡组 (\(deck.remainingOriginalCount) / \(deck.originalCards.count))")
-                        ForEach(deck.remainingOriginal.sorted(by: { $0.cost < $1.cost })) { card in
+                        ForEach(deck.remainingOriginal.sorted(by: { $0.cost < $1.cost }), id: \.dbfId) { card in
                             cardRow(card, count: 1)
                         }
                     }
                     if !deck.discoveredCards.isEmpty {
                         SectionHeader(title: "发现牌 (\(deck.discoveredCards.count))")
                             .foregroundColor(.blue)
-                        ForEach(deck.discoveredCards) { discovered in
+                        ForEach(deck.discoveredCards, id: \.id) { discovered in
                             HStack {
                                 cardRow(discovered.card, count: 1)
                                 Spacer()
@@ -146,75 +208,63 @@ struct DeckView: View {
 
     private func cardRow(_ card: Card, count: Int) -> some View {
         HStack(spacing: 8) {
-            CardThumbnailMini(cardId: card.cardId, cardName: card.name)
             Text("(\(card.cost))")
                 .font(.caption.monospacedDigit())
                 .foregroundColor(.secondary)
-                .frame(width: 24, alignment: .leading)
+                .frame(width: 24, alignment: .trailing)
             Text(card.name)
-                .font(.body)
+                .font(.callout)
                 .lineLimit(1)
+            Spacer()
             if count > 1 {
                 Text("×\(count)")
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundColor(.secondary)
             }
         }
+        .padding(.vertical, 2)
+        .padding(.horizontal, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(nsColor: .textBackgroundColor).opacity(0.3))
+        )
     }
 
     private var dataStatusBar: some View {
         HStack {
-            // 追踪状态
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(core.isTracking ? Color.green : Color.gray)
-                    .frame(width: 6, height: 6)
-                Text(core.isTracking ? "监控中" : "未启动")
+            if let result = core.lastUpdateResult {
+                Text("卡牌数据: \(result.totalCards) 张 (\(result.source.displayName))")
                     .font(.caption2)
+                    .foregroundColor(.secondary)
+            } else if core.isDataReady {
+                Text("卡牌数据已就绪")
+                    .font(.caption2)
+                    .foregroundColor(.green)
+            } else {
+                Text("等待卡牌数据...")
+                    .font(.caption2)
+                    .foregroundColor(.orange)
             }
-
             Spacer()
-
             if core.isUpdatingData {
                 ProgressView()
-                    .scaleEffect(0.6)
-                    .frame(width: 12, height: 12)
-                Text("正在更新卡牌数据…")
-                    .font(.caption2)
-            } else if core.isDataReady, let result = core.lastUpdateResult {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
-                    .font(.caption2)
-                Text("卡牌库 \(result.totalCards) 张, 更新于 \(formatDate(result.timestamp))")
-                    .font(.caption2)
-            } else {
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .font(.caption2)
-                Text("卡牌数据待更新")
-                    .font(.caption2)
+                    .scaleEffect(0.5)
             }
         }
-        .foregroundColor(.secondary)
         .padding(.horizontal)
-        .padding(.bottom, 8)
-    }
-
-    private func formatDate(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "MM/dd HH:mm"
-        return f.string(from: date)
+        .padding(.bottom, 4)
     }
 }
 
+// MARK: - Section Header
+
 struct SectionHeader: View {
     let title: String
-
     var body: some View {
         Text(title)
-            .font(.subheadline)
-            .fontWeight(.semibold)
+            .font(.caption)
             .foregroundColor(.secondary)
-            .padding(.top, 8)
+            .padding(.top, 4)
     }
 }
 
@@ -224,146 +274,95 @@ struct StatsView: View {
     @EnvironmentObject var core: CardTrackerCore
 
     var body: some View {
-        let stats = core.matchStats
-        VStack(alignment: .leading, spacing: 0) {
-            if stats.totalMatches == 0 {
-                emptyView
+        VStack(spacing: 16) {
+            Text("对战统计")
+                .font(.title2)
+                .fontWeight(.medium)
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                StatCard(title: "总场次", value: "\(core.matchStats.totalMatches)", color: .blue)
+                StatCard(title: "胜场", value: "\(core.matchStats.wins)", color: .green)
+                StatCard(title: "负场", value: "\(core.matchStats.losses)", color: .red)
+                StatCard(title: "胜率", value: String(format: "%.1f%%", core.matchStats.winRate * 100), color: .orange)
+                StatCard(title: "平局", value: "\(core.matchStats.draws)", color: .gray)
+                if core.matchStats.averageDuration > 0 {
+                    StatCard(title: "平均时长", value: formatDuration(core.matchStats.averageDuration), color: .purple)
+                }
+            }
+            .padding(.horizontal)
+
+            if core.matchRecords.isEmpty {
+                Spacer()
+                Text("暂无对战记录")
+                    .foregroundColor(.secondary)
+                Spacer()
             } else {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        overviewSection(stats: stats)
-                        matchHistorySection
+                List {
+                    ForEach(core.matchRecords) { match in
+                        MatchHistoryRow(match: match)
                     }
-                    .padding()
+                    .onDelete { indexSet in
+                        for idx in indexSet {
+                            let match = core.matchRecords[idx]
+                            core.deleteMatch(match)
+                        }
+                    }
                 }
+                .listStyle(.plain)
             }
         }
+        .padding()
     }
 
-    private var emptyView: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "chart.bar.xaxis")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("暂无对局记录")
-                .font(.headline)
-            Text("开始一场对战，数据将自动记录")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private func overviewSection(stats: MatchStats) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "总览")
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                StatCard(title: "总场次", value: "\(stats.totalMatches)")
-                StatCard(title: "胜率", value: String(format: "%.0f%%", stats.winRate * 100))
-                StatCard(title: "胜 / 负 / 平", value: "\(stats.wins) / \(stats.losses) / \(stats.draws)")
-                StatCard(title: "平均时长", value: formatDuration(stats.averageDuration))
-            }
-        }
-    }
-
-    private var matchHistorySection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(title: "最近对局")
-            ForEach(core.matchRecords.prefix(20)) { record in
-                MatchRow(record: record) {
-                    core.deleteMatch(record)
-                }
-            }
-        }
-    }
-
-    func formatDuration(_ duration: TimeInterval) -> String {
-        let m = Int(duration) / 60
-        let s = Int(duration) % 60
-        return "\(m)分\(s)秒"
+    func formatDuration(_ interval: TimeInterval) -> String {
+        let minutes = Int(interval) / 60
+        let seconds = Int(interval) % 60
+        return "\(minutes):\(String(format: "%02d", seconds))"
     }
 }
 
 struct StatCard: View {
     let title: String
     let value: String
+    let color: Color
 
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.title2)
-                .fontWeight(.bold)
+                .fontWeight(.semibold)
+                .foregroundColor(color)
             Text(title)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
+        .padding(8)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(color.opacity(0.08))
+        )
     }
 }
 
-struct MatchRow: View {
-    let record: MatchRecord
-    let onDelete: () -> Void
+struct MatchHistoryRow: View {
+    let match: MatchRecord
 
     var body: some View {
-        HStack(spacing: 12) {
-            resultBadge
+        HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(record.playerClass) vs \(record.opponentClass)")
+                Text("\(match.playerClass) vs \(match.opponentClass)")
                     .font(.subheadline)
-                    .fontWeight(.medium)
-                Text(formatDate(record.startTime))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-            if let end = record.endTime {
-                Text(formatDuration(record.duration))
+                Text(formatDate(match.startTime))
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .buttonStyle(.plain)
+            Spacer()
+            Text(match.result.displayName)
+                .font(.subheadline.bold())
+                .foregroundColor(resultColor(match.result))
         }
-        .padding(8)
-        .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .textBackgroundColor).opacity(0.5)))
-    }
-
-    private var resultBadge: some View {
-        Text(record.result.displayName)
-            .font(.caption2)
-            .fontWeight(.semibold)
-            .foregroundColor(badgeTextColor)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(badgeColor.opacity(0.15))
-            .cornerRadius(4)
-    }
-
-    private var badgeColor: Color {
-        switch record.result {
-        case .win:  return .green
-        case .loss: return .red
-        case .draw: return .gray
-        case .unknown: return .secondary
-        }
-    }
-
-    private var badgeTextColor: Color {
-        switch record.result {
-        case .win:  return .green
-        case .loss: return .red
-        case .draw: return .gray
-        case .unknown: return .secondary
-        }
+        .padding(.vertical, 4)
     }
 
     func formatDate(_ date: Date) -> String {
@@ -372,10 +371,13 @@ struct MatchRow: View {
         return f.string(from: date)
     }
 
-    func formatDuration(_ d: TimeInterval) -> String {
-        let m = Int(d) / 60
-        let s = Int(d) % 60
-        return "\(m)m \(s)s"
+    func resultColor(_ result: MatchResult) -> Color {
+        switch result {
+        case .win: return .green
+        case .loss: return .red
+        case .draw: return .gray
+        case .unknown: return .secondary
+        }
     }
 }
 
@@ -383,102 +385,78 @@ struct MatchRow: View {
 
 struct DeckLibraryView: View {
     @EnvironmentObject var core: CardTrackerCore
-    @State private var showSaveDialog = false
-    @State private var deckNameInput = ""
+    @State private var showingSaveDialog = false
+    @State private var newDeckName = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 8) {
             HStack {
-                SectionHeader(title: "我的卡组")
+                Text("我的卡组库")
+                    .font(.title3)
                 Spacer()
-                if core.playerDeck != nil {
-                    Button("保存当前卡组") {
-                        deckNameInput = core.playerDeck?.heroClass.displayName ?? "新卡组"
-                        showSaveDialog = true
+                Button("保存当前卡组") {
+                    if core.playerDeck != nil {
+                        showingSaveDialog = true
+                    } else {
+                        core.deckImportError = "请先导入卡组"
                     }
                 }
+                .font(.caption)
             }
             .padding(.horizontal)
-            .padding(.top, 8)
 
             if core.savedDecks.isEmpty {
-                emptyView
+                Spacer()
+                Text("暂无保存的卡组")
+                    .foregroundColor(.secondary)
+                Spacer()
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 6) {
-                        ForEach(core.savedDecks) { deck in
-                            DeckRow(deck: deck) {
-                                core.importDeck(from: deck.deckCode)
-                                core.updateDeckLastUsed(deck)
-                            } onDelete: {
-                                core.deleteSavedDeck(deck)
-                            }
-                        }
+                List {
+                    ForEach(core.savedDecks) { deck in
+                        DeckLibraryRow(deck: deck, onSelect: {
+                            core.importDeck(from: deck.deckCode)
+                            core.updateDeckLastUsed(deck)
+                        }, onDelete: {
+                            core.deleteSavedDeck(deck)
+                        })
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 4)
                 }
+                .listStyle(.plain)
             }
         }
-        .sheet(isPresented: $showSaveDialog) {
-            VStack(spacing: 16) {
-                Text("保存卡组")
-                    .font(.headline)
-                TextField("卡组名称", text: $deckNameInput)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 220)
-                HStack(spacing: 12) {
-                    Button("取消") { showSaveDialog = false }
-                        .keyboardShortcut(.escape)
-                    Button("保存") {
-                        core.saveCurrentDeck(name: deckNameInput)
-                        showSaveDialog = false
-                    }
-                    .keyboardShortcut(.return)
-                }
+        .padding(.vertical)
+        .alert("保存卡组", isPresented: $showingSaveDialog) {
+            TextField("卡组名称", text: $newDeckName)
+            Button("保存") {
+                core.saveCurrentDeck(name: newDeckName)
+                newDeckName = ""
             }
-            .padding(24)
-            .frame(width: 280, height: 150)
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("为当前卡组输入一个名称")
         }
-    }
-
-    private var emptyView: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "books.vertical")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("暂无保存的卡组")
-                .font(.headline)
-            Text("导入卡组码后，可以保存到卡组库")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
-struct DeckRow: View {
+struct DeckLibraryRow: View {
     let deck: SavedDeck
     let onSelect: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(deck.name)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
                     if deck.isFavorite {
                         Image(systemName: "star.fill")
                             .font(.caption)
                             .foregroundColor(.yellow)
                     }
+                    Text(deck.name)
+                        .font(.subheadline)
                 }
-                Text(deck.heroClass)
-                    .font(.caption)
+                Text("职业: \(deck.heroClass)")
+                    .font(.caption2)
                     .foregroundColor(.secondary)
                 if let lastUsed = deck.lastUsed {
                     Text("上次使用: \(formatDate(lastUsed))")
@@ -522,10 +500,59 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("卡牌数据库") {
+                Picker("数据来源", selection: $core.selectedDataSource) {
+                    ForEach(CardDataSource.allCases, id: \.self) { source in
+                        HStack {
+                            Text(source.displayName)
+                            if let date = core.availableDataSources[source] {
+                                Text("(\(formatDate(date)))")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .tag(source)
+                    }
+                }
+                .pickerStyle(.menu)
+                
+                HStack {
+                    if core.isUpdatingData {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                    }
+                    Text("当前: \(core.selectedDataSource.displayName)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Button("切换并更新") {
+                        Task { await core.switchDataSource(core.selectedDataSource) }
+                    }
+                    .disabled(core.isUpdatingData)
+                }
+                
+                ForEach(CardDataSource.allCases, id: \.self) { source in
+                    HStack {
+                        Text(source.displayName)
+                            .font(.caption)
+                        Spacer()
+                        if let date = core.availableDataSources[source] {
+                            Text("更新于 \(formatDate(date))")
+                                .font(.caption2)
+                                .foregroundColor(.green)
+                        } else {
+                            Text("未更新")
+                                .font(.caption2)
+                                .foregroundColor(.orange)
+                        }
+                    }
+                }
+            }
+
             Section("数据更新") {
                 Toggle("启动时自动检查卡牌更新", isOn: $autoCheckUpdates)
                 HStack {
-                    Button(core.isUpdatingData ? "更新中…" : "立即检查更新") {
+                    Button(core.isUpdatingData ? "更新中…" : "立即检查所有来源") {
                         Task { await core.checkCardDataUpdate() }
                     }
                     .disabled(core.isUpdatingData)
@@ -614,5 +641,11 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+    }
+
+    func formatDate(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "MM/dd HH:mm"
+        return f.string(from: date)
     }
 }

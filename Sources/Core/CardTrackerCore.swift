@@ -1,6 +1,32 @@
 import SwiftUI
 import Combine
 
+/// 卡牌数据库来源
+enum CardDataSource: String, CaseIterable, Codable {
+    case hearthstoneJSON = "HearthstoneJSON"
+    case hsReplay = "HSReplay.net"
+    case hearthPwn = "HearthPwn"
+    
+    var displayName: String {
+        switch self {
+        case .hearthstoneJSON: return "HearthstoneJSON"
+        case .hsReplay: return "HSReplay.net"
+        case .hearthPwn: return "HearthPwn"
+        }
+    }
+    
+    var apiURL: String {
+        switch self {
+        case .hearthstoneJSON:
+            return "https://api.hearthstonejson.com/v1/latest/enUS/cards.json"
+        case .hsReplay:
+            return "https://static.hsreplay.net/static/carddb/cards.json"
+        case .hearthPwn:
+            return "https://www.hearthpwn.com/cards"
+        }
+    }
+}
+
 /// 追踪器核心协调器：管理所有子模块，作为 App 环境对象注入
 @MainActor
 final class CardTrackerCore: ObservableObject {
@@ -26,6 +52,12 @@ final class CardTrackerCore: ObservableObject {
     @Published var isDataReady = false
     @Published var isUpdatingData = false
     @Published var lastUpdateResult: UpdateResult?
+    @Published var selectedDataSource: CardDataSource = .hearthstoneJSON {
+        didSet {
+            UserDefaults.standard.set(selectedDataSource.rawValue, forKey: "selectedDataSource")
+        }
+    }
+    @Published var availableDataSources: [CardDataSource: Date] = [:]
 
     // MARK: - Module References
 
@@ -42,15 +74,45 @@ final class CardTrackerCore: ObservableObject {
     @Published var isTracking = false
 
     private var cancellables = Set<AnyCancellable>()
+    private var hasInitialized = false
 
     init() {
+        // 先创建轻量级模块，不触发数据库查询
         ocrScanner = VisionOCRScanner(database: cardDatabase)
         opponentTracker = OpponentCardTracker(database: cardDatabase)
         eventPipeline = EventPipeline(database: cardDatabase)
         cardDataUpdater = CardDataUpdater(database: cardDatabase)
-        loadMatchHistory()
-        loadSavedDecks()
+        
+        // 读取上次选择的数据库来源
+        if let saved = UserDefaults.standard.string(forKey: "selectedDataSource"),
+           let source = CardDataSource(rawValue: saved) {
+            selectedDataSource = source
+        }
+        
+        // 延迟加载数据（在 initializeData 中完成）
         setupSubscriptions()
+    }
+    
+    /// 后台初始化数据（不阻塞 UI 线程）
+    func initializeData() async {
+        guard !hasInitialized else { return }
+        hasInitialized = true
+        
+        // 在后台线程加载历史数据
+        await Task.detached(priority: .background) { [weak self] in
+            guard let self = self else { return }
+            
+            // 加载本地持久化数据
+            await self.loadMatchHistory()
+            await self.loadSavedDecks()
+            
+            // 检查卡牌数据（带超时）
+            await self.checkCardDataUpdate()
+            
+            await MainActor.run {
+                self.isDataReady = true
+            }
+        }.value
     }
 
     // MARK: - Public Actions
@@ -110,14 +172,33 @@ final class CardTrackerCore: ObservableObject {
         opponentTracker.reset()
     }
 
-    /// 检查卡牌数据更新
+    /// 检查卡牌数据更新（支持多数据源，自动选最新的）
     func checkCardDataUpdate() async {
         guard !isUpdatingData else { return }
-
         await MainActor.run { isUpdatingData = true }
 
+        // 检查所有数据源
+        for source in CardDataSource.allCases {
+            do {
+                let result = try await cardDataUpdater.checkForUpdates(from: source)
+                await MainActor.run {
+                    availableDataSources[source] = result.timestamp
+                }
+            } catch {
+                print("[Core] 数据源 \(source.displayName) 更新失败: \(error)")
+            }
+        }
+
+        // 自动选择最新的数据源
+        if let latest = availableDataSources.max(by: { $0.value < $1.value }) {
+            await MainActor.run {
+                selectedDataSource = latest.key
+            }
+        }
+
+        // 用当前选中的数据源更新本地数据
         do {
-            let result = try await cardDataUpdater.checkForUpdates()
+            let result = try await cardDataUpdater.checkForUpdates(from: selectedDataSource)
             await MainActor.run {
                 lastUpdateResult = result
                 isDataReady = true
@@ -127,8 +208,28 @@ final class CardTrackerCore: ObservableObject {
             await MainActor.run {
                 deckImportError = error.localizedDescription
                 isUpdatingData = false
-                // 即使更新失败，本地缓存仍可能可用
                 isDataReady = true
+            }
+        }
+    }
+
+    /// 切换卡牌数据库来源并更新
+    func switchDataSource(_ source: CardDataSource) async {
+        selectedDataSource = source
+        guard !isUpdatingData else { return }
+        await MainActor.run { isUpdatingData = true }
+
+        do {
+            let result = try await cardDataUpdater.checkForUpdates(from: source)
+            await MainActor.run {
+                lastUpdateResult = result
+                isDataReady = true
+                isUpdatingData = false
+            }
+        } catch {
+            await MainActor.run {
+                deckImportError = error.localizedDescription
+                isUpdatingData = false
             }
         }
     }
@@ -144,16 +245,23 @@ final class CardTrackerCore: ObservableObject {
         importDeck(from: deckCode)
     }
 
-    /// 解析并导入卡组码
+    /// 解析并导入卡组码（无字数限制）
     func importDeck(from deckCode: String) {
         deckImportError = nil
 
+        // 清理输入：去除多余空白和换行
+        let cleaned = deckCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else {
+            deckImportError = "卡组码为空"
+            return
+        }
+
         do {
-            let result = try DeckCodeParser.parse(deckCode, database: cardDatabase)
+            let result = try DeckCodeParser.parse(cleaned, database: cardDatabase)
 
             let originalCards: [Card] = result.cards.map { $0.card }
             playerDeck = TrackedDeck(
-                deckCode: deckCode,
+                deckCode: cleaned,
                 originalCards: originalCards,
                 discoveredCards: [],
                 heroClass: result.heroClass,
@@ -174,9 +282,9 @@ final class CardTrackerCore: ObservableObject {
 
     // MARK: - Match Recording
 
-    func startMatch() {
-        let pc = playerDeck?.heroClass.displayName ?? "未知"
-        let oc = opponentTracker.heroClass.displayName
+    func startMatch(playerClass: HeroClass, opponentClass: HeroClass) {
+        let pc = playerClass.displayName
+        let oc = opponentClass.displayName
         let dc = playerDeck?.deckCode ?? ""
         currentMatch = MatchRecord(
             startTime: Date(),
@@ -191,7 +299,9 @@ final class CardTrackerCore: ObservableObject {
         m.endTime = Date()
         m.result = result
         cardDatabase.saveMatch(m)
-        loadMatchHistory()
+        Task { @MainActor in
+            await loadMatchHistory()
+        }
         currentMatch = nil
         resetMatch()
     }
@@ -246,6 +356,23 @@ final class CardTrackerCore: ObservableObject {
         }
     }
 
+    // MARK: - Overlay Control
+
+    func toggleOverlay() {
+        OverlayWindowController.shared.toggle(core: self)
+        isOverlayVisible = OverlayWindowController.shared.isVisible
+    }
+
+    func showOverlay() {
+        OverlayWindowController.shared.show(core: self)
+        isOverlayVisible = true
+    }
+
+    func hideOverlay() {
+        OverlayWindowController.shared.hide()
+        isOverlayVisible = false
+    }
+
     // MARK: - Private
 
     private func setupSubscriptions() {
@@ -278,7 +405,6 @@ final class CardTrackerCore: ObservableObject {
     }
 
     private func handleDraw(_ event: CardEvent, deck: TrackedDeck) {
-        // 从剩余牌库移入手牌
         guard let index = deck.remainingOriginal.firstIndex(where: { $0.id == event.card.id }) else {
             return
         }
@@ -289,21 +415,16 @@ final class CardTrackerCore: ObservableObject {
     }
 
     private func handlePlay(_ event: CardEvent, deck: TrackedDeck) {
-        // 从手牌/剩余牌库移到已打出
         var newDeck = deck
 
-        // 先尝试手牌
         if let handIndex = newDeck.handOriginal.firstIndex(where: { $0.id == event.card.id }) {
             let played = newDeck.handOriginal.remove(at: handIndex)
             newDeck.playedOriginal.append(played)
-
         } else if let remainingIndex = newDeck.remainingOriginal.firstIndex(where: { $0.id == event.card.id }) {
-            // 直接打出（如从牌库打出）
             let played = newDeck.remainingOriginal.remove(at: remainingIndex)
             newDeck.playedOriginal.append(played)
         }
 
-        // 检查发现牌
         if let discIndex = newDeck.discoveredCards.firstIndex(where: { $0.card.id == event.card.id && !$0.isPlayed }) {
             newDeck.discoveredCards[discIndex].isPlayed = true
         }
@@ -312,7 +433,6 @@ final class CardTrackerCore: ObservableObject {
     }
 
     private func handleDestroy(_ event: CardEvent, deck: TrackedDeck) {
-        // 从手牌/剩余牌库移除（被摧毁）
         var newDeck = deck
 
         if let handIndex = newDeck.handOriginal.firstIndex(where: { $0.id == event.card.id }) {
@@ -325,7 +445,6 @@ final class CardTrackerCore: ObservableObject {
     }
 
     private func handleCreate(_ event: CardEvent, deck: TrackedDeck) {
-        // 发现/随机/生成牌
         let discovered = DiscoveredCard(
             card: event.card,
             source: .generated(by: "游戏事件"),

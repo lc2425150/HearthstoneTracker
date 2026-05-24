@@ -32,9 +32,4 @@ enum Constants {
     static let overlayMinOpacity = 0.3
     static let overlayMaxOpacity = 1.0
     static let overlayDefaultOpacity = 0.7
-
-    // MARK: - API
-
-    /// 卡牌数据源：使用 enUS 获取完整英文字段（含 cardId），dbfId 作为主键查询
-    static let cardDataUpdateURL = "https://api.hearthstonejson.com/v1/latest/enUS/cards.json"
 }
