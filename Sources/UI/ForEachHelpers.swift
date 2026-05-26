@@ -28,7 +28,26 @@ struct CardListSection: View {
     var body: some View {
         VStack(spacing: 2) {
             ForEach(Array(zip(cards.indices, cards)), id: \.0) { _, card in
-                CardMiniRow(card: card)
+                if let deck = core.playerDeck {
+                    let count = deck.countOf(card: card.dbfId)
+                    CardMiniRow(card: card, count: count)
+                } else {
+                    CardMiniRow(card: card)
+                }
+            }
+        }
+    }
+}
+
+/// 显示所有卡牌（含完整数量）
+struct AllCardsSection: View {
+    let cards: [(card: Card, count: Int)]
+    @EnvironmentObject var core: CardTrackerCore
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            ForEach(Array(zip(cards.indices, cards)), id: \.0) { _, entry in
+                CardMiniRow(card: entry.card, count: entry.count)
             }
         }
     }

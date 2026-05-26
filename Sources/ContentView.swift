@@ -172,7 +172,7 @@ struct DeckView: View {
                 Label("职业: \(deck.heroClass.displayName)", systemImage: "person.fill")
                     .font(.subheadline)
                 Spacer()
-                Text("共 \(deck.originalCards.count) 张")
+                Text("共 \(deck.totalOriginalCount) 张")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -181,9 +181,9 @@ struct DeckView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
-                    if !deck.originalCards.isEmpty {
-                        SectionHeader(title: "原卡组 (\(deck.remainingOriginalCount) / \(deck.originalCards.count))")
-                        CardListSection(cards: deck.remainingOriginal.sorted(by: { $0.cost < $1.cost }))
+                    if deck.totalOriginalCount > 0 {
+                        SectionHeader(title: "原卡组 (剩余\(deck.remainingOriginalCount) / 共\(deck.totalOriginalCount))")
+                        AllCardsSection(cards: deck.allOriginalCards)
                     }
                     if !deck.discoveredCards.isEmpty {
                         SectionHeader(title: "发现牌 (\(deck.discoveredCards.count))")
@@ -655,6 +655,17 @@ struct SettingsView: View {
                 Slider(value: $overlayOpacity, in: 0.3...1.0) {
                     Text("透明度")
                 }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("悬浮窗宽度: \(Int(core.overlayWidth))px")
+                        .font(.caption)
+                    Slider(value: $core.overlayWidth, in: 180...500, step: 10) {
+                        Text("宽度")
+                    }
+                }
+                
+                Toggle("悬浮窗显示在游戏界面内部", isOn: $core.overlayInsideGame)
+                    .help("开启后悬浮窗贴合在游戏窗口内侧，关闭后在外侧")
                 
                 Picker("卡牌尺寸", selection: $core.cardDisplaySize) {
                     ForEach(CardDisplaySize.allCases, id: \.self) { size in

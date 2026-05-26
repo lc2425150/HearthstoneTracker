@@ -128,7 +128,7 @@ struct DebugPanelView: View {
                     }
                     HStack {
                         Text("原卡组:")
-                        Text("\(deck.originalCards.count) 张")
+                        Text("\(deck.totalOriginalCount) 张")
                     }
                     HStack {
                         Text("发现牌:")

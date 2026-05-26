@@ -19,7 +19,7 @@ enum CardDataSource: String, CaseIterable, Codable {
     var apiURL: String {
         switch self {
         case .hearthstoneJSON:
-            return "https://api.hearthstonejson.com/v1/latest/enUS/cards.json"
+            return "https://api.hearthstonejson.com/v1/latest/zhCN/cards.json"
         case .hsReplay:
             return "https://static.hsreplay.net/static/carddb/cards.json"
         case .hearthPwn:
@@ -53,6 +53,12 @@ final class CardTrackerCore: ObservableObject {
     @Published var isDataReady = false
     @Published var isUpdatingData = false
     @Published var lastUpdateResult: UpdateResult?
+    @Published var overlayWidth: CGFloat = 280 {
+        didSet { UserDefaults.standard.set(overlayWidth, forKey: "overlayWidth") }
+    }
+    @Published var overlayInsideGame = false {
+        didSet { UserDefaults.standard.set(overlayInsideGame, forKey: "overlayInsideGame") }
+    }
     @Published var cardDisplaySize: CardDisplaySize {
         didSet {
             UserDefaults.standard.set(cardDisplaySize.rawValue, forKey: "cardDisplaySize")
@@ -100,6 +106,8 @@ final class CardTrackerCore: ObservableObject {
         
         // 读取卡牌尺寸和数据库来源设置
         windowsLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        overlayWidth = UserDefaults.standard.object(forKey: "overlayWidth") != nil ? CGFloat(UserDefaults.standard.double(forKey: "overlayWidth")) : 280
+        overlayInsideGame = UserDefaults.standard.bool(forKey: "overlayInsideGame")
         
         if let savedSize = UserDefaults.standard.string(forKey: "cardDisplaySize"),
            let size = CardDisplaySize(rawValue: savedSize) {
@@ -286,15 +294,12 @@ final class CardTrackerCore: ObservableObject {
         do {
             let result = try DeckCodeParser.parse(cleaned, database: cardDatabase)
 
-            let originalCards: [Card] = result.cards.map { $0.card }
+            let cardTuples = result.cards.map { ($0.card, $0.count) }
             playerDeck = TrackedDeck(
                 deckCode: cleaned,
-                originalCards: originalCards,
+                cards: cardTuples,
                 discoveredCards: [],
-                heroClass: result.heroClass,
-                remainingOriginal: originalCards,
-                playedOriginal: [],
-                handOriginal: []
+                heroClass: result.heroClass
             )
         } catch {
             deckImportError = error.localizedDescription
@@ -461,27 +466,30 @@ final class CardTrackerCore: ObservableObject {
     }
 
     private func handleDraw(_ event: CardEvent, deck: TrackedDeck) {
-        guard let index = deck.remainingOriginal.firstIndex(where: { $0.id == event.card.id }) else {
-            return
-        }
         var newDeck = deck
-        let drawn = newDeck.remainingOriginal.remove(at: index)
-        newDeck.handOriginal.append(drawn)
+        let dbfId = event.card.dbfId
+        if let current = newDeck.cardCounts[dbfId], current > 0 {
+            newDeck.cardCounts[dbfId] = current - 1
+            newDeck.handOriginal.append(event.card)
+        }
         playerDeck = newDeck
     }
 
     private func handlePlay(_ event: CardEvent, deck: TrackedDeck) {
         var newDeck = deck
-
-        if let handIndex = newDeck.handOriginal.firstIndex(where: { $0.id == event.card.id }) {
-            let played = newDeck.handOriginal.remove(at: handIndex)
-            newDeck.playedOriginal.append(played)
-        } else if let remainingIndex = newDeck.remainingOriginal.firstIndex(where: { $0.id == event.card.id }) {
-            let played = newDeck.remainingOriginal.remove(at: remainingIndex)
-            newDeck.playedOriginal.append(played)
+        let dbfId = event.card.dbfId
+        
+        // 从手牌移除
+        if let handIndex = newDeck.handOriginal.firstIndex(where: { $0.dbfId == dbfId }) {
+            newDeck.handOriginal.remove(at: handIndex)
+            newDeck.playedOriginal.append(event.card)
+        } else if let current = newDeck.cardCounts[dbfId], current > 0 {
+            // 直接从牌库打出
+            newDeck.cardCounts[dbfId] = current - 1
+            newDeck.playedOriginal.append(event.card)
         }
 
-        if let discIndex = newDeck.discoveredCards.firstIndex(where: { $0.card.id == event.card.id && !$0.isPlayed }) {
+        if let discIndex = newDeck.discoveredCards.firstIndex(where: { $0.card.dbfId == dbfId && !$0.isPlayed }) {
             newDeck.discoveredCards[discIndex].isPlayed = true
         }
 
@@ -490,11 +498,12 @@ final class CardTrackerCore: ObservableObject {
 
     private func handleDestroy(_ event: CardEvent, deck: TrackedDeck) {
         var newDeck = deck
-
-        if let handIndex = newDeck.handOriginal.firstIndex(where: { $0.id == event.card.id }) {
+        let dbfId = event.card.dbfId
+        
+        if let handIndex = newDeck.handOriginal.firstIndex(where: { $0.dbfId == dbfId }) {
             newDeck.handOriginal.remove(at: handIndex)
-        } else if let remainingIndex = newDeck.remainingOriginal.firstIndex(where: { $0.id == event.card.id }) {
-            newDeck.remainingOriginal.remove(at: remainingIndex)
+        } else if let current = newDeck.cardCounts[dbfId], current > 0 {
+            newDeck.cardCounts[dbfId] = current - 1
         }
 
         playerDeck = newDeck

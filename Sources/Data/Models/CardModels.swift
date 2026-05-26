@@ -30,14 +30,59 @@ extension Card: Identifiable {
 
 struct TrackedDeck {
     let deckCode: String
-    let originalCards: [Card]
-    var discoveredCards: [DiscoveredCard]
     let heroClass: HeroClass
-    var remainingOriginal: [Card]
-    var playedOriginal: [Card] = []
+    var discoveredCards: [DiscoveredCard]
+    
+    // 卡牌数量追踪（dbfId → 剩余张数）
+    var cardCounts: [Int: Int] = [:]  // dbfId → count
+    var cardPool: [Int: Card] = [:]   // dbfId → Card 对象
+    
+    // 完整卡牌列表（含复制）
+    var allCards: [Card] {
+        cardPool.values.sorted(by: { $0.cost < $1.cost })
+    }
+    
+    var remainingOriginal: [Card] {
+        cardCounts.filter { $0.value > 0 }.compactMap { cardPool[$0.key] }.sorted(by: { $0.cost < $1.cost })
+    }
+    
+    /// 所有原始卡牌（唯一卡牌 + 完整数量）
+    var allOriginalCards: [(card: Card, count: Int)] {
+        cardPool.values.map { card in
+            (card: card, count: cardCounts[card.dbfId] ?? 1)
+        }.sorted(by: { $0.card.cost < $1.card.cost })
+    }
+    var remainingOriginalCount: Int { cardCounts.values.reduce(0, +) }
+    var totalOriginalCount: Int { originalTotal }
+    
+    private let originalTotal: Int
+    
+    // 手牌/已打出追踪（实体ID列表）
     var handOriginal: [Card] = []
-    var remainingOriginalCount: Int { remainingOriginal.count }
-    var totalOriginalCount: Int { originalCards.count }
+    var playedOriginal: [Card] = []
+    
+    init(deckCode: String, cards: [(card: Card, count: Int)], discoveredCards: [DiscoveredCard] = [], heroClass: HeroClass) {
+        self.deckCode = deckCode
+        self.heroClass = heroClass
+        self.discoveredCards = discoveredCards
+        var counts: [Int: Int] = [:]
+        var pool: [Int: Card] = [:]
+        var total = 0
+        for (card, count) in cards {
+            counts[card.dbfId] = count
+            pool[card.dbfId] = card
+            total += count
+        }
+        self.cardCounts = counts
+        self.cardPool = pool
+        self.originalTotal = total
+    }
+    
+    /// 获取卡牌剩余张数
+    func countOf(card dbfId: Int) -> Int { cardCounts[dbfId] ?? 0 }
+    
+    /// 获取卡牌原始总张数
+    func originalCountOf(card dbfId: Int) -> Int { 2 } // 默认2张，传奇1张
 }
 
 struct DiscoveredCard: Identifiable {

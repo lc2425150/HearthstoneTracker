@@ -55,7 +55,7 @@ struct OverlayView: View {
                 bottomStatusBar
             }
         }
-        .frame(width: 320, height: 420)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Header
@@ -240,6 +240,10 @@ struct OverlayCardRow: View {
 
     var body: some View {
         HStack(spacing: 4) {
+            // 卡牌缩略图
+            CardThumbnailMini(cardId: card.cardId, cardName: card.name)
+                .frame(width: 20, height: 28)
+            
             // 稀有度颜色条
             RoundedRectangle(cornerRadius: 1)
                 .fill(raritySwiftUIColor(card.rarityColor))

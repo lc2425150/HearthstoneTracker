@@ -64,7 +64,7 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
 
     private func createOverlayWindow(core: CardTrackerCore) -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 420),
+            contentRect: NSRect(x: 0, y: 0, width: 280, height: 600),
             styleMask: [.borderless, .fullSizeContentView, .resizable],
             backing: .buffered,
             defer: false
@@ -131,24 +131,48 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
         // 如果用户正在拖拽，不自动定位
         guard !isDragging else { return }
 
-        let overlaySize = win.frame.size
-        let gap: CGFloat = 0 // 紧密贴合，无间隙
+        let gap: CGFloat = 0
+        let overlayWidth = UserDefaults.standard.object(forKey: "overlayWidth") as? Double ?? 280
+        let insideGame = UserDefaults.standard.bool(forKey: "overlayInsideGame")
+        
+        // 匹配游戏窗口高度
+        let overlayHeight = hsFrame.height * 0.92
+        let newSize = NSSize(width: overlayWidth, height: overlayHeight)
+        win.setContentSize(newSize)
 
         let origin: NSPoint
-        switch preferredSide {
-        case .right:
-            origin = NSPoint(
-                x: hsFrame.maxX + gap,
-                y: hsFrame.maxY - overlaySize.height
-            )
-        case .left:
-            origin = NSPoint(
-                x: hsFrame.minX - overlaySize.width - gap,
-                y: hsFrame.maxY - overlaySize.height
-            )
+        if insideGame {
+            // 游戏界面内部
+            switch preferredSide {
+            case .right:
+                origin = NSPoint(
+                    x: hsFrame.maxX - overlayWidth - 10,
+                    y: hsFrame.minY + hsFrame.height * 0.04
+                )
+            case .left:
+                origin = NSPoint(
+                    x: hsFrame.minX + 10,
+                    y: hsFrame.minY + hsFrame.height * 0.04
+                )
+            }
+        } else {
+            // 游戏窗口外侧
+            switch preferredSide {
+            case .right:
+                origin = NSPoint(
+                    x: hsFrame.maxX + gap,
+                    y: hsFrame.minY
+                )
+            case .left:
+                origin = NSPoint(
+                    x: hsFrame.minX - overlayWidth - gap,
+                    y: hsFrame.minY
+                )
+            }
         }
 
         win.setFrameOrigin(origin)
+        win.setContentSize(newSize)
     }
 
     private func startPositionTracking() {
