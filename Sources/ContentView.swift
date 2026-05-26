@@ -264,51 +264,137 @@ struct StatsView: View {
     @EnvironmentObject var core: CardTrackerCore
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("对战统计")
-                .font(.title2)
-                .fontWeight(.medium)
+        ScrollView {
+            VStack(spacing: 16) {
+                Text("对战统计")
+                    .font(.title2)
+                    .fontWeight(.medium)
 
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                StatCard(title: "总场次", value: "\(core.matchStats.totalMatches)", color: .blue)
-                StatCard(title: "胜场", value: "\(core.matchStats.wins)", color: .green)
-                StatCard(title: "负场", value: "\(core.matchStats.losses)", color: .red)
-                StatCard(title: "胜率", value: String(format: "%.1f%%", core.matchStats.winRate * 100), color: .orange)
-                StatCard(title: "平局", value: "\(core.matchStats.draws)", color: .gray)
-                if core.matchStats.averageDuration > 0 {
-                    StatCard(title: "平均时长", value: formatDuration(core.matchStats.averageDuration), color: .purple)
-                }
-            }
-            .padding(.horizontal)
-
-            if core.matchRecords.isEmpty {
-                Spacer()
-                Text("暂无对战记录")
-                    .foregroundColor(.secondary)
-                Spacer()
-            } else {
-                List {
-                    let matches = core.matchRecords
-                    ForEach(matches) { match in
-                        MatchHistoryRow(match: match)
+                // 总览卡片
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    StatCard(title: "总场次", value: "\(core.matchStats.totalMatches)", color: .blue)
+                    StatCard(title: "胜场", value: "\(core.matchStats.wins)", color: .green)
+                    StatCard(title: "负场", value: "\(core.matchStats.losses)", color: .red)
+                    StatCard(title: "胜率", value: String(format: "%.1f%%", core.matchStats.winRate * 100), color: .orange)
+                    StatCard(title: "平局", value: "\(core.matchStats.draws)", color: .gray)
+                    if core.matchStats.averageDuration > 0 {
+                        StatCard(title: "平均时长", value: formatDuration(core.matchStats.averageDuration), color: .purple)
                     }
-                    .onDelete { indexSet in
-                        for idx in indexSet {
-                            let match = core.matchRecords[idx]
-                            core.deleteMatch(match)
+                }
+                .padding(.horizontal)
+
+                // 最近状态
+                if !core.matchStats.recentResults.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("近期战绩（最近20场）")
+                                .font(.subheadline).bold()
+                            Spacer()
+                            let streak = core.matchStats.currentStreak
+                            if streak.count > 0 {
+                                Text(streak.result == .win ? "\(streak.count)连胜 🔥" : "\(streak.count)连败 💔")
+                                    .font(.caption)
+                                    .foregroundColor(streak.result == .win ? .green : .red)
+                            }
+                        }
+                        HStack(spacing: 3) {
+                            ForEach(core.matchStats.recentResults.prefix(20), id: \.hashValue) { result in
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(result == .win ? Color.green : result == .loss ? Color.red : Color.gray)
+                                    .frame(width: 12, height: 20)
+                            }
                         }
                     }
+                    .padding(.horizontal)
                 }
-                .listStyle(.plain)
+
+                // 按对手职业统计
+                if !core.matchStats.statsByOpponentClass.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("对战胜率（按对手职业）")
+                            .font(.subheadline).bold()
+                            .padding(.horizontal)
+
+                        ForEach(core.matchStats.statsByOpponentClass) { stat in
+                            ClassStatRow(stat: stat)
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+
+                // 对战记录
+                if core.matchRecords.isEmpty {
+                    Text("暂无对战记录")
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 40)
+                } else {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("对战记录")
+                            .font(.subheadline).bold()
+                            .padding(.horizontal)
+
+                        List {
+                            let matches = core.matchRecords
+                            ForEach(matches) { match in
+                                MatchHistoryRow(match: match)
+                            }
+                            .onDelete { indexSet in
+                                for idx in indexSet {
+                                    let match = core.matchRecords[idx]
+                                    core.deleteMatch(match)
+                                }
+                            }
+                        }
+                        .listStyle(.plain)
+                        .frame(minHeight: 200)
+                    }
+                }
             }
+            .padding(.vertical)
         }
-        .padding()
     }
 
     func formatDuration(_ interval: TimeInterval) -> String {
         let minutes = Int(interval) / 60
         let seconds = Int(interval) % 60
         return "\(minutes):\(String(format: "%02d", seconds))"
+    }
+}
+
+// MARK: - 职业胜率行
+
+struct ClassStatRow: View {
+    let stat: MatchStats.ClassStats
+
+    var body: some View {
+        HStack {
+            Text(stat.className)
+                .font(.caption)
+                .frame(width: 60, alignment: .leading)
+            
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color.red.opacity(0.2))
+                        .frame(width: geo.size.width, height: 16)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color.green.opacity(0.6))
+                        .frame(width: max(geo.size.width * CGFloat(stat.winRate), 2), height: 16)
+                }
+            }
+            .frame(height: 16)
+            
+            Text(String(format: "%.0f%%", stat.winRate * 100))
+                .font(.caption)
+                .foregroundColor(stat.winRate >= 0.5 ? .green : .red)
+                .frame(width: 40)
+            
+            Text("\(stat.wins)W-\(stat.losses)L")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .frame(width: 60)
+        }
+        .padding(.vertical, 2)
     }
 }
 

@@ -61,6 +61,31 @@ struct MatchStats {
     let draws: Int
     let winRate: Double
     let averageDuration: TimeInterval
+    
+    // 按职业统计
+    struct ClassStats: Identifiable {
+        let id = UUID()
+        let className: String
+        let wins: Int
+        let losses: Int
+        var total: Int { wins + losses }
+        var winRate: Double { total > 0 ? Double(wins) / Double(total) : 0 }
+    }
+    
+    let statsByPlayerClass: [ClassStats]
+    let statsByOpponentClass: [ClassStats]
+    
+    // 最近胜负记录（最近 20 场）
+    let recentResults: [MatchResult]
+    var currentStreak: (result: MatchResult, count: Int) {
+        guard !recentResults.isEmpty else { return (.unknown, 0) }
+        var count = 0
+        let first = recentResults[0]
+        for result in recentResults {
+            if result == first { count += 1 } else { break }
+        }
+        return (first, count)
+    }
 
     init(records: [MatchRecord]) {
         totalMatches = records.count
@@ -75,6 +100,29 @@ struct MatchStats {
         } else {
             averageDuration = completed.reduce(0) { $0 + $1.duration } / Double(completed.count)
         }
+        
+        // 按对手职业统计
+        var oppClasses: [String: (wins: Int, losses: Int)] = [:]
+        var playerClasses: [String: (wins: Int, losses: Int)] = [:]
+        for record in records {
+            let opp = oppClasses[record.opponentClass] ?? (0, 0)
+            let player = playerClasses[record.playerClass] ?? (0, 0)
+            if record.result == .win {
+                oppClasses[record.opponentClass] = (opp.wins + 1, opp.losses)
+                playerClasses[record.playerClass] = (player.wins + 1, player.losses)
+            } else if record.result == .loss {
+                oppClasses[record.opponentClass] = (opp.wins, opp.losses + 1)
+                playerClasses[record.playerClass] = (player.wins, player.losses + 1)
+            }
+        }
+        statsByOpponentClass = oppClasses.map { .init(className: $0.key, wins: $0.value.wins, losses: $0.value.losses) }
+            .sorted { $0.winRate > $1.winRate }
+        statsByPlayerClass = playerClasses.map { .init(className: $0.key, wins: $0.value.wins, losses: $0.value.losses) }
+            .sorted { $0.winRate > $1.winRate }
+        
+        // 最近 20 场
+        let sorted = records.sorted { $0.startTime > $1.startTime }
+        recentResults = Array(sorted.prefix(20)).map { $0.result }
     }
 }
 
