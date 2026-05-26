@@ -5,8 +5,12 @@ import AppKit
 final class OverlayWindowController: NSObject, @unchecked Sendable {
     
     func updateLockState(locked: Bool) {
-        window?.ignoresMouseEvents = locked
-        window?.isMovableByWindowBackground = !locked
+        guard let win = window else { return }
+        updateWindowLockState(window: win, locked: locked)
+        // 锁定后自动吸附对齐
+        if locked {
+            positionNextToHearthstone()
+        }
     }
     static let shared = OverlayWindowController()
     private var window: NSWindow?
@@ -65,7 +69,7 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
     private func createOverlayWindow(core: CardTrackerCore) -> NSWindow {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 280, height: 600),
-            styleMask: [.borderless, .fullSizeContentView, .resizable],
+            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -73,21 +77,45 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
         window.level = .floating
         window.isOpaque = false
         window.backgroundColor = NSColor.clear
-        let initialLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
-        window.ignoresMouseEvents = initialLocked
-        window.isMovableByWindowBackground = !initialLocked
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
-        window.hasShadow = true
-        window.isMovableByWindowBackground = true
+        window.hasShadow = false
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
+        
+        if let panel = window as? NSPanel {
+            panel.isFloatingPanel = true
+        }
+        
+        let initialLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        updateWindowLockState(window: window, locked: initialLocked)
+        
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         window.delegate = self
 
         let overlayView = OverlayView().environmentObject(core)
         let hostingView = NSHostingView(rootView: overlayView)
         window.contentView = hostingView
+        
+        // 最小/最大内容尺寸
+        window.contentMinSize = NSSize(width: 180, height: 200)
+        window.contentMaxSize = NSSize(width: 600, height: NSScreen.main?.frame.height ?? 1200)
 
         return window
+    }
+    
+    /// 根据锁定状态更新窗口样式（HSTracker 方案）
+    private func updateWindowLockState(window: NSWindow, locked: Bool) {
+        if locked {
+            // 锁定模式：无边框、鼠标穿透、不可移动
+            window.styleMask = [.borderless, .nonactivatingPanel, .fullSizeContentView]
+            window.ignoresMouseEvents = true
+            window.isMovableByWindowBackground = false
+        } else {
+            // 解锁模式：可拖动、可调整大小、可点击
+            window.styleMask = [.titled, .miniaturizable, .resizable, .borderless, .nonactivatingPanel, .fullSizeContentView]
+            window.ignoresMouseEvents = false
+            window.isMovableByWindowBackground = true
+            window.isMovable = true
+        }
     }
 
     // MARK: - Hearthstone Window Tracking
@@ -129,13 +157,14 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
         lastHearthstoneFrame = hsFrame
         
         // 如果用户正在拖拽，不自动定位
-        guard !isDragging else { return }
+        let locked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        guard !isDragging, locked else { return }
 
         let gap: CGFloat = 0
         let overlayWidth = UserDefaults.standard.object(forKey: "overlayWidth") as? Double ?? 280
         let insideGame = UserDefaults.standard.bool(forKey: "overlayInsideGame")
         
-        // 匹配游戏窗口高度
+        // 锁定模式下自动匹配游戏窗口高度
         let overlayHeight = hsFrame.height * 0.92
         let newSize = NSSize(width: overlayWidth, height: overlayHeight)
         win.setContentSize(newSize)
@@ -230,8 +259,11 @@ extension OverlayWindowController: NSWindowDelegate {
     }
     
     func windowDidMove(_ notification: Notification) {
-        // 用户停止拖拽后，判断是否要切换侧边
         isDragging = false
+        
+        // 解锁模式下不自动吸附，保持用户拖拽位置
+        let locked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        if !locked { return }
         
         guard let win = window, let hsFrame = findHearthstoneWindow() else { return }
         

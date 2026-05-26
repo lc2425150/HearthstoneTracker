@@ -41,9 +41,26 @@ struct CardThumbnail: View {
     }
 
     private var fallbackView: some View {
-        Rectangle()
-            .fill(Color.gray.opacity(0.15))
-            .overlay(
+        ZStack {
+            // 卡背风格占位
+            RoundedRectangle(cornerRadius: 4)
+                .fill(
+                    cardId.isEmpty ?
+                    LinearGradient(colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.2)], startPoint: .top, endPoint: .bottom) :
+                    LinearGradient(colors: [Color.gray.opacity(0.2), Color.gray.opacity(0.1)], startPoint: .top, endPoint: .bottom)
+                )
+            
+            if cardId.isEmpty {
+                // 未知卡牌：显示 DBF ID
+                VStack(spacing: 2) {
+                    Image(systemName: "questionmark.circle")
+                        .font(.system(size: size * 0.3))
+                        .foregroundColor(.white.opacity(0.5))
+                    Text("未知")
+                        .font(.system(size: size * 0.15))
+                        .foregroundColor(.white.opacity(0.4))
+                }
+            } else {
                 VStack(spacing: 2) {
                     if let cost = cost {
                         Text("\(cost)")
@@ -57,7 +74,8 @@ struct CardThumbnail: View {
                         .font(.system(size: size * 0.35))
                         .foregroundColor(.gray)
                 }
-            )
+            }
+        }
     }
 }
 
