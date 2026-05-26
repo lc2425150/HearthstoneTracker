@@ -129,47 +129,70 @@ struct StatusView: View {
     }
 
     private func launchBattleNet() {
-        // 搜索 Battle.net 安装路径
+        // 搜索 Battle.net 安装路径（使用 mdfind + 预设路径）
         let searchPaths = [
+            "/Volumes/T7/Applications/Battle.net.app",
             "/Applications/Battle.net.app",
             "/Applications/Blizzard Battle.net.app",
-            "/Volumes/T7/Applications/Battle.net.app",
             "/Users/\(NSUserName())/Applications/Battle.net.app",
             "/Users/\(NSUserName())/Library/Application Support/Battle.net/Versions/Battle.net.app",
-            "/Applications/Battle.net alias" // 替身/别名
         ]
         
-        // 先尝试用 open -a 启动（如果已注册）
-        let task = Process()
-        task.launchPath = "/usr/bin/open"
-        task.arguments = ["-a", "Battle.net"]
+        // 先用 mdfind 搜索
+        let spotlightPaths = findAppViaSpotlight("Battle.net.app")
+        let allPaths = spotlightPaths + searchPaths
         
-        do {
-            try task.run()
-            autoCheckDeadline = Date().addingTimeInterval(5 * 60)
-            startAutoCheck()
-            print("[StatusView] Launching Battle.net via open -a")
-            return
-        } catch {
-            // fallback: 尝试各个路径
-        }
-        
-        for path in searchPaths {
-            if FileManager.default.fileExists(atPath: path) {
-                let task2 = Process()
-                task2.launchPath = "/usr/bin/open"
-                task2.arguments = [path]
-                do {
-                    try task2.run()
-                    autoCheckDeadline = Date().addingTimeInterval(5 * 60)
-                    startAutoCheck()
-                    print("[StatusView] Launching Battle.net from \(path)")
-                    return
-                } catch {
-                    continue
+        for path in allPaths {
+            guard FileManager.default.fileExists(atPath: path) else { continue }
+            let url = URL(fileURLWithPath: path)
+            let config = NSWorkspace.OpenConfiguration()
+            config.activates = true
+            
+            NSWorkspace.shared.openApplication(at: url, configuration: config) { app, error in
+                if let error = error {
+                    print("[StatusView] Failed to launch Battle.net from \(path): \(error)")
+                } else {
+                    print("[StatusView] Launched Battle.net from \(path)")
                 }
             }
+            autoCheckDeadline = Date().addingTimeInterval(5 * 60)
+            startAutoCheck()
+            return
         }
+        
+        // 最后尝试：通过 bundle identifier 启动
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "net.battle.app") {
+            let config = NSWorkspace.OpenConfiguration()
+            config.activates = true
+            NSWorkspace.shared.openApplication(at: appURL, configuration: config) { app, error in
+                if let error = error {
+                    print("[StatusView] Failed to launch via bundle ID: \(error)")
+                } else {
+                    print("[StatusView] Launched Battle.net via bundle ID")
+                }
+            }
+            autoCheckDeadline = Date().addingTimeInterval(5 * 60)
+            startAutoCheck()
+            return
+        }
+        
         print("[StatusView] Battle.net not found on this system")
+    }
+    
+    private func findAppViaSpotlight(_ appName: String) -> [String] {
+        let task = Process()
+        task.launchPath = "/usr/bin/mdfind"
+        task.arguments = ["kMDItemFSName == '\(appName)'"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        do {
+            try task.run()
+            task.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8) ?? ""
+            return output.components(separatedBy: "\n").filter { !$0.isEmpty }
+        } catch {
+            return []
+        }
     }
 }

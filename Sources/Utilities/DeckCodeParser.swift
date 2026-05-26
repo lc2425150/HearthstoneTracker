@@ -65,13 +65,18 @@ enum DeckCodeParser {
     // MARK: - Private Decoding
 
     private static func decodeBase64(_ input: String) throws -> [UInt8] {
-        // 去除可能的空白字符
+        // 去除可能的空白字符和非 Base64 字符（如中文）
         let cleaned = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else { throw ParseError.invalidBase64 }
 
+        // 只保留标准 Base64 字符（A-Z, a-z, 0-9, +, /, =）
+        let validChars = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=")
+        let filtered = cleaned.filter { validChars.contains($0) }
+        guard !filtered.isEmpty else { throw ParseError.invalidBase64 }
+
         // 炉石使用标准 Base64 字母表补全后再解码
-        var padded = cleaned
-        let remainder = cleaned.count % 4
+        var padded = filtered
+        let remainder = filtered.count % 4
         if remainder > 0 {
             padded += String(repeating: "=", count: 4 - remainder)
         }

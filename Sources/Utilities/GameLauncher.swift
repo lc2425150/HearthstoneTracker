@@ -15,6 +15,8 @@ final class GameLauncher: ObservableObject, @unchecked Sendable {
         "/Applications/Hearthstone/Hearthstone.app",
         "/Volumes/T7/Applications/Hearthstone/Hearthstone.app",
         "/Users/\(NSUserName())/Applications/Hearthstone/Hearthstone.app",
+        "/Applications/Battle.net.app",
+        "/Volumes/T7/Applications/Battle.net.app",
     ]
     
     private var timer: Timer?
