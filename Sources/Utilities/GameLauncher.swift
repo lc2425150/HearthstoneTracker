@@ -11,7 +11,11 @@ final class GameLauncher: ObservableObject, @unchecked Sendable {
     /// 游戏进程名称（macOS 版）
     private let gameBundleId = "com.blizzard.heartstone"
     private let gameName = "Hearthstone"
-    private let gamePath = "/Applications/Hearthstone/Hearthstone.app"
+    private let gamePaths = [
+        "/Applications/Hearthstone/Hearthstone.app",
+        "/Volumes/T7/Applications/Hearthstone/Hearthstone.app",
+        "/Users/\(NSUserName())/Applications/Hearthstone/Hearthstone.app",
+    ]
     
     private var timer: Timer?
     private let updateInterval: TimeInterval = 5.0
@@ -28,13 +32,13 @@ final class GameLauncher: ObservableObject, @unchecked Sendable {
     
     /// 启动炉石传说游戏
     func launchGame() -> Bool {
-        // 检查应用是否存在
-        guard FileManager.default.fileExists(atPath: gamePath) else {
-            print("[GameLauncher] Hearthstone not found at \(gamePath)")
+        // 搜索炉石传说安装路径
+        guard let foundPath = gamePaths.first(where: { FileManager.default.fileExists(atPath: $0) }) else {
+            print("[GameLauncher] Hearthstone not found at any known path")
             return false
         }
         
-        let url = URL(fileURLWithPath: gamePath)
+        let url = URL(fileURLWithPath: foundPath)
         
         do {
             let config = NSWorkspace.OpenConfiguration()
@@ -57,8 +61,12 @@ final class GameLauncher: ObservableObject, @unchecked Sendable {
         let runningApps = NSWorkspace.shared.runningApplications
         let isRunning = runningApps.contains { app in
             app.bundleIdentifier == gameBundleId ||
+            app.bundleIdentifier?.contains("heartstone") == true ||
+            app.bundleIdentifier?.contains("blizzard") == true ||
             app.localizedName?.contains(gameName) == true ||
-            app.executableURL?.lastPathComponent.contains("Hearthstone") == true
+            app.localizedName?.contains("炉石") == true ||
+            app.executableURL?.lastPathComponent.contains("Hearthstone") == true ||
+            app.executableURL?.lastPathComponent.contains("Unity") == true
         }
         
         DispatchQueue.main.async {

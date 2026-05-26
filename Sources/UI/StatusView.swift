@@ -129,31 +129,47 @@ struct StatusView: View {
     }
 
     private func launchBattleNet() {
+        // 搜索 Battle.net 安装路径
+        let searchPaths = [
+            "/Applications/Battle.net.app",
+            "/Applications/Blizzard Battle.net.app",
+            "/Volumes/T7/Applications/Battle.net.app",
+            "/Users/\(NSUserName())/Applications/Battle.net.app",
+            "/Users/\(NSUserName())/Library/Application Support/Battle.net/Versions/Battle.net.app",
+            "/Applications/Battle.net alias" // 替身/别名
+        ]
+        
+        // 先尝试用 open -a 启动（如果已注册）
         let task = Process()
         task.launchPath = "/usr/bin/open"
         task.arguments = ["-a", "Battle.net"]
-
+        
         do {
             try task.run()
             autoCheckDeadline = Date().addingTimeInterval(5 * 60)
             startAutoCheck()
+            print("[StatusView] Launching Battle.net via open -a")
+            return
         } catch {
-            let fallbackPaths = [
-                "/Applications/Battle.net.app",
-                "/Users/\(NSUserName())/Applications/Battle.net.app"
-            ]
-            for path in fallbackPaths {
-                if FileManager.default.fileExists(atPath: path) {
-                    let task2 = Process()
-                    task2.launchPath = "/usr/bin/open"
-                    task2.arguments = [path]
-                    try? task2.run()
+            // fallback: 尝试各个路径
+        }
+        
+        for path in searchPaths {
+            if FileManager.default.fileExists(atPath: path) {
+                let task2 = Process()
+                task2.launchPath = "/usr/bin/open"
+                task2.arguments = [path]
+                do {
+                    try task2.run()
                     autoCheckDeadline = Date().addingTimeInterval(5 * 60)
                     startAutoCheck()
+                    print("[StatusView] Launching Battle.net from \(path)")
                     return
+                } catch {
+                    continue
                 }
             }
-            print("未找到战网客户端")
         }
+        print("[StatusView] Battle.net not found on this system")
     }
 }
