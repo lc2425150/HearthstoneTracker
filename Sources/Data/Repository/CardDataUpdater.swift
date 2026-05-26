@@ -33,9 +33,9 @@ final class CardDataUpdater {
         case .hearthstoneJSON:
             cards = try parseHearthstoneJSON(data)
         case .hsReplay:
-            cards = try parseHSReplayJSON(data)
+            cards = try parseHearthstoneJSON(data)
         case .hearthPwn:
-            cards = try parseHearthPwnHTML(data)
+            cards = try parseHearthstoneJSON(data)
         }
 
         // 清空旧数据并用新数据重填
@@ -183,5 +183,26 @@ extension CardDatabase {
         if context.hasChanges {
             try context.save()
         }
+    }
+    
+    /// 获取本地卡牌总数（用于判断是否已下载）
+    func countAllCards() -> Int {
+        let context = modelContainer.mainContext
+        let descriptor = FetchDescriptor<Card>()
+        return (try? context.fetchCount(descriptor)) ?? 0
+    }
+    
+    /// 获取本地卡牌数据的最后更新时间
+    func lastUpdateDate() -> Date? {
+        let userDefaults = UserDefaults.standard
+        if let date = userDefaults.object(forKey: "cardDataLastUpdate") as? Date {
+            return date
+        }
+        return nil
+    }
+    
+    /// 保存卡牌数据的最后更新时间
+    func saveLastUpdateDate(_ date: Date) {
+        UserDefaults.standard.set(date, forKey: "cardDataLastUpdate")
     }
 }

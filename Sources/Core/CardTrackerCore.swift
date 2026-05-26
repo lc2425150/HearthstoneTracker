@@ -21,9 +21,11 @@ enum CardDataSource: String, CaseIterable, Codable {
         case .hearthstoneJSON:
             return "https://api.hearthstonejson.com/v1/latest/zhCN/cards.json"
         case .hsReplay:
-            return "https://static.hsreplay.net/static/carddb/cards.json"
+            // 备用: 使用 hearthstoneJSON 的英文数据
+            return "https://api.hearthstonejson.com/v1/latest/enUS/cards.json"
         case .hearthPwn:
-            return "https://www.hearthpwn.com/cards"
+            // 备用: 同样使用 hearthstoneJSON
+            return "https://api.hearthstonejson.com/v1/latest/zhCN/cards.json"
         }
     }
 }
@@ -242,38 +244,42 @@ final class CardTrackerCore: ObservableObject {
         guard !isUpdatingData else { return }
         await MainActor.run { isUpdatingData = true }
 
-        // 检查所有数据源
-        for source in CardDataSource.allCases {
-            do {
-                let result = try await cardDataUpdater.checkForUpdates(from: source)
-                await MainActor.run {
-                    availableDataSources[source] = result.timestamp
-                }
-            } catch {
-                print("[Core] 数据源 \(source.displayName) 更新失败: \(error)")
-            }
-        }
-
-        // 自动选择最新的数据源
-        if let latest = availableDataSources.max(by: { $0.value < $1.value }) {
+        // 先检查本地是否已有卡牌数据
+        let localCardCount = cardDatabase.countAllCards()
+        if localCardCount > 0 {
+            print("[Core] 本地已有 \(localCardCount) 张卡牌，跳过下载")
             await MainActor.run {
-                selectedDataSource = latest.key
+                isDataReady = true
+                isUpdatingData = false
+                let lastUpdate = cardDatabase.lastUpdateDate()
+                if let date = lastUpdate {
+                    availableDataSources[selectedDataSource] = date
+                }
             }
+            return
         }
-
-        // 用当前选中的数据源更新本地数据
+        
+        print("[Core] 本地无卡牌数据，开始下载...")
+        
+        // 只从 hearthstoneJSON 下载（其他数据源已失效）
+        let primarySource = CardDataSource.hearthstoneJSON
         do {
-            let result = try await cardDataUpdater.checkForUpdates(from: selectedDataSource)
+            let result = try await cardDataUpdater.checkForUpdates(from: primarySource)
+            cardDatabase.saveLastUpdateDate(result.timestamp)
             await MainActor.run {
                 lastUpdateResult = result
+                availableDataSources[primarySource] = result.timestamp
+                selectedDataSource = primarySource
                 isDataReady = true
                 isUpdatingData = false
             }
+            print("[Core] 卡牌数据下载成功: \(result.totalCards) 张")
         } catch {
+            print("[Core] 卡牌数据下载失败: \(error)")
             await MainActor.run {
-                deckImportError = error.localizedDescription
+                deckImportError = "卡牌数据下载失败，请检查网络后重试"
                 isUpdatingData = false
-                isDataReady = true
+                isDataReady = true // 仍标记为 ready 以免 UI 卡住
             }
         }
     }
