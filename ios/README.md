@@ -1,88 +1,72 @@
-# 炉边记牌器 (iOS)
+# 炉边记牌器 - iOS 版
 
-炉石传说 iOS 记牌器，支持手动追踪、卡组管理、对局统计。
+炉石传说手机版记牌器，基于 SwiftUI + SwiftData 开发。
 
 ## 功能
 
-- **卡组管理**：导入卡组码、创建卡组、卡牌列表查看
-- **实时追踪**：手动追踪手牌、牌库、已打出牌、发现牌
-- **对局统计**：胜率统计、按职业/卡组分类、连胜记录
-- **卡牌数据**：自动从 HearthstoneJSON 更新卡牌数据库
-- **OCR 识别**：通过屏幕录制 + Vision 框架识别卡牌（可选）
+- **卡组管理**：创建、编辑、导入/导出卡组（支持炉石卡组代码）
+- **实时记牌**：对局中追踪剩余卡牌、已抽/已打牌
+- **统计**：胜率统计、职业对阵分析
+- **OCR 识别**：通过屏幕录制识别卡牌（需要 iOS 17+）
+- **卡牌图鉴**：浏览全部卡牌数据
 
-## 在 Xcode 中打开
+## 系统要求
 
-### 方式一：使用 Swift Package Manager (推荐)
+- iOS 17.0+
+- Xcode 15.0+ (推荐 Xcode 16+)
+- 真机调试需要 Apple Developer 账号（免费也可）
+
+## 构建方法
+
+### 方法一：Xcode 打开项目
 
 ```bash
-open Package.swift
+# 1. 生成 Xcode 项目文件
+cd ios
+python3 gen_json_project.py
+
+# 2. 用 Xcode 打开
+open HearthstoneTracker.xcodeproj
 ```
 
-### 方式二：创建 Xcode 项目
+### 方法二：命令行构建
 
-1. 在 Xcode 中选 `File > New > Project`
-2. 选择 `iOS > App`，点 Next
-3. 填写：
-   - Product Name: `HearthstoneTracker`
-   - Team: (个人开发者账号或 None)
-   - Organization Identifier: `com.yourname`
-   - Interface: `SwiftUI`
-   - Language: `Swift`
-   - 取消勾选所有选项
-4. 点 Next，选择 `ios/` 目录
-5. 创建后，删除默认生成的文件
-6. 将 `HearthstoneTracker-iOS/` 目录下所有文件拖入项目
-7. 确保 `Info.plist` 在项目中正确引用
+```bash
+# Simulator 构建
+cd ios
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -target HearthstoneTracker -sdk iphonesimulator build
 
-### 构建并运行
+# 真机构建（需要签名）
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -target HearthstoneTracker -sdk iphoneos build
+```
 
-1. 连接你的 iPhone，或在模拟器中运行
-2. 选择目标设备
-3. `Cmd + R` 构建运行
-4. 首次启动会自动下载卡牌数据
+### 方法三：Swift Package Manager
+
+用 Xcode 打开 `ios/Package.swift`，选择 iOS 目标运行。
 
 ## 项目结构
 
 ```
-HearthstoneTracker-iOS/
-├── HearthstoneTrackerApp.swift   # 应用入口
-├── ContentView.swift             # 主视图 (TabView)
-├── Info.plist                    # 应用配置
-├── Assets.xcassets/              # 资源文件
-├── Views/
-│   ├── DeckLibraryView.swift     # 卡组库
-│   ├── DeckDetailView.swift      # 卡组详情
-│   ├── LiveMatchView.swift       # 实时对战追踪
-│   ├── StatsView.swift           # 统计
-│   └── SettingsView.swift        # 设置
-├── Models/
-│   └── CardModels.swift          # 数据模型
-├── Services/
-│   ├── CardDataService.swift     # 卡牌数据服务
-│   ├── CardImageLoader.swift     # 卡图加载
-│   ├── TrackingService.swift     # 对战追踪
-│   └── OCRService.swift          # 屏幕录制 OCR
-└── Utilities/
-    ├── DeckCodeParser.swift      # 卡组码解析
-    └── Constants.swift           # 常量定义
+ios/
+├── HearthstoneTracker-iOS/       # 源代码
+│   ├── HearthstoneTrackerApp.swift  # App 入口
+│   ├── ContentView.swift            # 主视图
+│   ├── Models/                      # 数据模型 (SwiftData)
+│   ├── Views/                       # 视图层
+│   ├── Services/                    # 服务层 (OCR, 追踪, 数据)
+│   └── Utilities/                   # 工具 (卡组解析)
+├── gen_json_project.py           # 项目文件生成器
+├── Package.swift                 # SwiftPM 配置
+└── README.md
 ```
 
-## 使用说明
+## 真机安装
 
-1. **导入卡组**：在「牌库」Tab 点击 +，粘贴卡组码即可
-2. **开始追踪**：点击卡组进入详情，点「开始对局追踪」
-3. **操作**：点击手牌 = 打出，长按手牌 = 显示菜单（弃牌/消灭）
-4. **抽牌**：点「抽牌」按钮，或「下一回合」自动抽牌
-5. **发现牌**：点「添加发现牌」搜索并添加
-6. **结束对局**：选择胜利或失败
+1. 连接 iPhone 到 Mac
+2. Xcode > 选择 iPhone 目标 > Run (⌘R)
+3. Xcode 会自动处理签名和安装
 
-## 数据来源
-
-- 卡牌数据: [HearthstoneJSON](https://hearthstonejson.com)
-- 卡牌图片: `art.hearthstonejson.com`
-
-## 系统要求
-
-- iOS 18.0+
-- Xcode 16+
-- Swift 6.2
+> **注意**：首次连接真机需要 Xcode 下载对应 iOS 版本的 DeviceSupport 文件
+> （Xcode > Settings > Components > iOS 设备支持）
