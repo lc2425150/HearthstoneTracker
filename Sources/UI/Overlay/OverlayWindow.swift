@@ -175,12 +175,46 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
         win.setContentSize(newSize)
     }
 
+    private var wasHearthstoneActive = false
+    private var overlayHiddenBySwitch = false
+    
     private func startPositionTracking() {
         positionTimer?.invalidate()
         positionTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self = self, !self.isDragging else { return }
+            
+            // 自动隐藏：检查炉石是否是当前活跃应用
+            let isActive = self.isHearthstoneFrontmost()
+            let autoHide = UserDefaults.standard.bool(forKey: "overlayAutoHide")
+            
+            if autoHide {
+                if !isActive && !self.overlayHiddenBySwitch {
+                    // 用户切到其他应用 → 隐藏悬浮窗
+                    self.overlayHiddenBySwitch = true
+                    self.window?.orderOut(nil)
+                } else if isActive && self.overlayHiddenBySwitch {
+                    // 用户切回炉石 → 显示悬浮窗
+                    self.overlayHiddenBySwitch = false
+                    self.window?.orderFront(nil)
+                    self.positionNextToHearthstone()
+                }
+            } else if self.overlayHiddenBySwitch {
+                // 关闭自动隐藏时恢复显示
+                self.overlayHiddenBySwitch = false
+                self.window?.orderFront(nil)
+            }
+            
             self.positionNextToHearthstone()
         }
+    }
+    
+    /// 检查炉石是否是当前最前端的应用
+    private func isHearthstoneFrontmost() -> Bool {
+        guard let frontApp = NSWorkspace.shared.frontmostApplication else { return false }
+        return frontApp.bundleIdentifier == "com.blizzard.heartstone" ||
+               frontApp.localizedName == "Hearthstone" ||
+               frontApp.bundleIdentifier?.contains("heartstone") == true ||
+               frontApp.bundleIdentifier?.contains("blizzard") == true
     }
 
     private func stopPositionTracking() {

@@ -667,6 +667,9 @@ struct SettingsView: View {
                 Toggle("悬浮窗显示在游戏界面内部", isOn: $core.overlayInsideGame)
                     .help("开启后悬浮窗贴合在游戏窗口内侧，关闭后在外侧")
                 
+                Toggle("自动隐藏悬浮窗（切出游戏时）", isOn: $core.overlayAutoHide)
+                    .help("切换到其他应用时自动隐藏悬浮窗，回到游戏时自动显示")
+                
                 Picker("卡牌尺寸", selection: $core.cardDisplaySize) {
                     ForEach(CardDisplaySize.allCases, id: \.self) { size in
                         Text(size.displayName).tag(size)

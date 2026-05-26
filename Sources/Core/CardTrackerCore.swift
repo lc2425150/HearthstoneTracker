@@ -59,6 +59,9 @@ final class CardTrackerCore: ObservableObject {
     @Published var overlayInsideGame = false {
         didSet { UserDefaults.standard.set(overlayInsideGame, forKey: "overlayInsideGame") }
     }
+    @Published var overlayAutoHide = false {
+        didSet { UserDefaults.standard.set(overlayAutoHide, forKey: "overlayAutoHide") }
+    }
     @Published var cardDisplaySize: CardDisplaySize {
         didSet {
             UserDefaults.standard.set(cardDisplaySize.rawValue, forKey: "cardDisplaySize")
@@ -108,6 +111,7 @@ final class CardTrackerCore: ObservableObject {
         windowsLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
         overlayWidth = UserDefaults.standard.object(forKey: "overlayWidth") != nil ? CGFloat(UserDefaults.standard.double(forKey: "overlayWidth")) : 280
         overlayInsideGame = UserDefaults.standard.bool(forKey: "overlayInsideGame")
+        overlayAutoHide = UserDefaults.standard.bool(forKey: "overlayAutoHide")
         
         if let savedSize = UserDefaults.standard.string(forKey: "cardDisplaySize"),
            let size = CardDisplaySize(rawValue: savedSize) {
