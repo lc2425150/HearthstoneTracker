@@ -390,6 +390,26 @@ final class CardTrackerCore: ObservableObject {
         loadSavedDecks()
     }
 
+    @MainActor func editDeckName(_ deck: SavedDeck, newName: String) {
+        deck.name = newName
+        do {
+            try cardDatabase.modelContainer.mainContext.save()
+            loadSavedDecks()
+        } catch {
+            print("[Core] Failed to rename deck: \(error)")
+        }
+    }
+
+    @MainActor func toggleFavorite(_ deck: SavedDeck) {
+        deck.isFavorite.toggle()
+        do {
+            try cardDatabase.modelContainer.mainContext.save()
+            loadSavedDecks()
+        } catch {
+            print("[Core] Failed to toggle favorite: \(error)")
+        }
+    }
+
     @MainActor func updateDeckLastUsed(_ deck: SavedDeck) {
         deck.lastUsed = Date()
         do {

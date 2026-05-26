@@ -431,21 +431,39 @@ struct DeckLibraryView: View {
 }
 
 struct DeckLibraryRow: View {
+    @EnvironmentObject var core: CardTrackerCore
     let deck: SavedDeck
     let onSelect: () -> Void
     let onDelete: () -> Void
+    @State private var isEditing = false
+    @State private var editName = ""
 
     var body: some View {
         HStack {
+            // 收藏按钮
+            Button(action: { core.toggleFavorite(deck) }) {
+                Image(systemName: deck.isFavorite ? "star.fill" : "star")
+                    .font(.caption)
+                    .foregroundColor(deck.isFavorite ? .yellow : .gray)
+            }
+            .buttonStyle(.plain)
+
             VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    if deck.isFavorite {
-                        Image(systemName: "star.fill")
-                            .font(.caption)
-                            .foregroundColor(.yellow)
-                    }
+                if isEditing {
+                    TextField("卡组名称", text: $editName, onCommit: {
+                        core.editDeckName(deck, newName: editName)
+                        isEditing = false
+                    })
+                    .textFieldStyle(.roundedBorder)
+                    .font(.subheadline)
+                    .frame(maxWidth: 200)
+                } else {
                     Text(deck.name)
                         .font(.subheadline)
+                        .onTapGesture(count: 2) {
+                            editName = deck.name
+                            isEditing = true
+                        }
                 }
                 Text("职业: \(deck.heroClass)")
                     .font(.caption2)
@@ -459,15 +477,20 @@ struct DeckLibraryRow: View {
             Spacer()
             Button("使用", action: onSelect)
                 .font(.caption)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
             Button(action: onDelete) {
                 Image(systemName: "trash")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.red)
             }
             .buttonStyle(.plain)
         }
         .padding(8)
-        .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .textBackgroundColor).opacity(0.5)))
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(deck.isFavorite ? Color.yellow.opacity(0.06) : Color(nsColor: .textBackgroundColor).opacity(0.5))
+        )
     }
 
     func formatDate(_ date: Date) -> String {
