@@ -146,15 +146,17 @@ enum Player { case player, opponent }
 // 注册所有模型的容器
 @MainActor
 class CardDatabase {
-    let modelContainer: ModelContainer
+    private var _container: ModelContainer?
+    var modelContainer: ModelContainer {
+        if let c = _container { return c }
+        let c = try! ModelContainer(for: Card.self, MatchRecord.self, SavedDeck.self)
+        _container = c
+        return c
+    }
     let allModels: [any PersistentModel.Type] = [Card.self, MatchRecord.self, SavedDeck.self]
     
     init() {
-        do {
-            modelContainer = try ModelContainer(for: Card.self, MatchRecord.self, SavedDeck.self)
-        } catch {
-            fatalError("CardDatabase 初始化失败: \(error)")
-        }
+        // ModelContainer 改为懒加载，启动不阻塞主线程
     }
     
     func card(for dbfId: Int) -> Card? {
