@@ -43,11 +43,16 @@ final class OCRService: NSObject, ObservableObject {
 
     /// 停止屏幕录制
     func stopRecording() async {
-        do {
-            try await recorder.stopCapture()
-            await MainActor.run { self.isRecording = false }
-        } catch {
-            print("OCR 录制停止失败: \(error.localizedDescription)")
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            recorder.stopCapture { error in
+                if let error = error {
+                    print("OCR 录制停止失败: \(error.localizedDescription)")
+                }
+                Task { @MainActor in
+                    self.isRecording = false
+                }
+                continuation.resume()
+            }
         }
     }
 

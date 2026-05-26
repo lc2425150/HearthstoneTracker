@@ -1,0 +1,277 @@
+// !$*UTF8*$!
+{archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
+/* Begin PBXBuildFile section */
+		F00000000 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000000; };
+		F00000001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000001; };
+		F00000002 /* CardTrackerCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000002; };
+		F00000003 /* EventPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000003; };
+		F00000004 /* CardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000004; };
+		F00000005 /* MatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000005; };
+		F00000006 /* CardDataUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000006; };
+		F00000007 /* HearthstoneTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000007; };
+		F00000008 /* LogFileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000008; };
+		F00000009 /* LogMonitorModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000009; };
+		F0000000A /* PowerLogParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = R0000000A; };
+		F0000000B /* VisionOCRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = R0000000B; };
+		F0000000C /* OpponentCardTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = R0000000C; };
+		F0000000D /* CardImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = R0000000D; };
+		F0000000E /* DebugPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = R0000000E; };
+		F0000000F /* ForEachHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = R0000000F; };
+		F00000010 /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000010; };
+		F00000011 /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000011; };
+		F00000012 /* StatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000012; };
+		F00000013 /* TestHarnessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000013; };
+		F00000014 /* CardImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000014; };
+		F00000015 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000015; };
+		F00000016 /* DeckCodeParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000016; };
+		F00000017 /* GameLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000017; };
+		F00000018 /* HSReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000018; };
+		F00000019 /* VersionChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = R00000019; };
+
+/* End PBXBuildFile section */
+/* Begin PBXFileReference section */
+		R00000000 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/AppDelegate.swift"; sourceTree = "<group>"; };
+		R00000001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/ContentView.swift"; sourceTree = "<group>"; };
+		R00000002 /* CardTrackerCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Core/CardTrackerCore.swift"; sourceTree = "<group>"; };
+		R00000003 /* EventPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Core/EventPipeline.swift"; sourceTree = "<group>"; };
+		R00000004 /* CardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Data/Models/CardModels.swift"; sourceTree = "<group>"; };
+		R00000005 /* MatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Data/Models/MatchModels.swift"; sourceTree = "<group>"; };
+		R00000006 /* CardDataUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Data/Repository/CardDataUpdater.swift"; sourceTree = "<group>"; };
+		R00000007 /* HearthstoneTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HearthstoneTrackerApp.swift"; sourceTree = "<group>"; };
+		R00000008 /* LogFileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/LogMonitor/LogFileWatcher.swift"; sourceTree = "<group>"; };
+		R00000009 /* LogMonitorModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/LogMonitor/LogMonitorModule.swift"; sourceTree = "<group>"; };
+		R0000000A /* PowerLogParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/LogMonitor/PowerLogParser.swift"; sourceTree = "<group>"; };
+		R0000000B /* VisionOCRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Recognition/VisionOCRScanner.swift"; sourceTree = "<group>"; };
+		R0000000C /* OpponentCardTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Tracking/OpponentCardTracker.swift"; sourceTree = "<group>"; };
+		R0000000D /* CardImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/UI/CardImageView.swift"; sourceTree = "<group>"; };
+		R0000000E /* DebugPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/UI/DebugPanelView.swift"; sourceTree = "<group>"; };
+		R0000000F /* ForEachHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/UI/ForEachHelpers.swift"; sourceTree = "<group>"; };
+		R00000010 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/UI/Overlay/OverlayView.swift"; sourceTree = "<group>"; };
+		R00000011 /* OverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/UI/Overlay/OverlayWindow.swift"; sourceTree = "<group>"; };
+		R00000012 /* StatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/UI/StatusView.swift"; sourceTree = "<group>"; };
+		R00000013 /* TestHarnessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/UI/TestHarnessView.swift"; sourceTree = "<group>"; };
+		R00000014 /* CardImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Utilities/CardImageLoader.swift"; sourceTree = "<group>"; };
+		R00000015 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Utilities/Constants.swift"; sourceTree = "<group>"; };
+		R00000016 /* DeckCodeParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Utilities/DeckCodeParser.swift"; sourceTree = "<group>"; };
+		R00000017 /* GameLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Utilities/GameLauncher.swift"; sourceTree = "<group>"; };
+		R00000018 /* HSReplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Utilities/HSReplayManager.swift"; sourceTree = "<group>"; };
+		R00000019 /* VersionChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Utilities/VersionChecker.swift"; sourceTree = "<group>"; };
+
+/* End PBXFileReference section */
+/* Begin PBXFrameworksBuildPhase section */
+/* End PBXFrameworksBuildPhase section */
+/* Begin PBXGroup section */
+		G0000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				G0000000000000002,
+			);
+			sourceTree = "<group>";
+		};
+		G0000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				R00000000,
+				R00000001,
+				R00000002,
+				R00000003,
+				R00000004,
+				R00000005,
+				R00000006,
+				R00000007,
+				R00000008,
+				R00000009,
+				R0000000A,
+				R0000000B,
+				R0000000C,
+				R0000000D,
+				R0000000E,
+				R0000000F,
+				R00000010,
+				R00000011,
+				R00000012,
+				R00000013,
+				R00000014,
+				R00000015,
+				R00000016,
+				R00000017,
+				R00000018,
+				R00000019,
+
+			);
+			path = Sources;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+/* Begin PBXNativeTarget section */
+		T0000000000000001 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C0000000000000001;
+			buildPhases = (
+				P0000000000000001,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HearthstoneTracker;
+			productName = HearthstoneTracker;
+			productReference = R0000000000000001;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+/* Begin PBXProject section */
+		P0000000000000001 = {
+			isa = PBXProject;
+			attributes = {};
+			buildConfigurationList = C0000000000000002;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				"zh-Hans",
+			);
+			mainGroup = G0000000000000001;
+			productRefGroup = G0000000000000001;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				T0000000000000001,
+			);
+		};
+/* End PBXProject section */
+/* Begin PBXSourcesBuildPhase section */
+		P0000000000000001 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F00000000,
+				F00000001,
+				F00000002,
+				F00000003,
+				F00000004,
+				F00000005,
+				F00000006,
+				F00000007,
+				F00000008,
+				F00000009,
+				F0000000A,
+				F0000000B,
+				F0000000C,
+				F0000000D,
+				F0000000E,
+				F0000000F,
+				F00000010,
+				F00000011,
+				F00000012,
+				F00000013,
+				F00000014,
+				F00000015,
+				F00000016,
+				F00000017,
+				F00000018,
+				F00000019,
+
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+/* Begin XCBuildConfiguration section */
+		C0000000000000003 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 7;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sources/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "炉石记牌器";
+				INFOPLIST_KEY_LSUIElement = NO;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.7;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hearthstonetracker.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1,2;
+			};
+			name = Debug;
+		};
+		C0000000000000004 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 7;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sources/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "炉石记牌器";
+				INFOPLIST_KEY_LSUIElement = NO;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.7;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hearthstonetracker.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1,2;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+/* Begin XCConfigurationList section */
+		C0000000000000001 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0000000000000003,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C0000000000000002 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0000000000000003,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+};

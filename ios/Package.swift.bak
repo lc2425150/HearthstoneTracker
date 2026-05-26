@@ -8,18 +8,20 @@ let package = Package(
         .iOS(.v17)
     ],
     products: [
-        .library(
-            name: "HearthstoneTracker",
-            targets: ["HearthstoneTracker"]
-        )
+        .executable(name: "HearthstoneTracker", targets: ["HearthstoneTracker"])
     ],
+    dependencies: [],
     targets: [
-        .target(
+        .executableTarget(
             name: "HearthstoneTracker",
+            dependencies: [],
             path: "HearthstoneTracker-iOS",
             exclude: [],
             resources: [
                 .process("Assets.xcassets")
+            ],
+            swiftSettings: [
+                .define("SWIFT_PACKAGE")
             ]
         )
     ]
