@@ -669,6 +669,18 @@ struct SettingsView: View {
 
             Section("OCR 识别") {
                 Toggle("启用 OCR 兜底识别", isOn: $enableOCR)
+                Toggle("OCR 识别对手卡牌", isOn: $core.ocrOpponentTracking)
+                    .help("追踪时每3秒扫描游戏窗口识别对手打出的卡牌")
+                if core.ocrOpponentTracking {
+                    HStack {
+                        Image(systemName: "info.circle")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        Text("追踪启动后将自动扫描识别对手卡牌")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
 
             Section("悬浮窗") {

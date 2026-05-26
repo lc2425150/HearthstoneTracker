@@ -62,6 +62,9 @@ final class CardTrackerCore: ObservableObject {
     @Published var overlayAutoHide = false {
         didSet { UserDefaults.standard.set(overlayAutoHide, forKey: "overlayAutoHide") }
     }
+    @Published var ocrOpponentTracking = true {
+        didSet { UserDefaults.standard.set(ocrOpponentTracking, forKey: "ocrOpponentTracking") }
+    }
     @Published var cardDisplaySize: CardDisplaySize {
         didSet {
             UserDefaults.standard.set(cardDisplaySize.rawValue, forKey: "cardDisplaySize")
@@ -112,6 +115,7 @@ final class CardTrackerCore: ObservableObject {
         overlayWidth = UserDefaults.standard.object(forKey: "overlayWidth") != nil ? CGFloat(UserDefaults.standard.double(forKey: "overlayWidth")) : 280
         overlayInsideGame = UserDefaults.standard.bool(forKey: "overlayInsideGame")
         overlayAutoHide = UserDefaults.standard.bool(forKey: "overlayAutoHide")
+        ocrOpponentTracking = UserDefaults.standard.bool(forKey: "ocrOpponentTracking")
         
         if let savedSize = UserDefaults.standard.string(forKey: "cardDisplaySize"),
            let size = CardDisplaySize(rawValue: savedSize) {
@@ -159,11 +163,17 @@ final class CardTrackerCore: ObservableObject {
     func startTracking() {
         guard !isTracking else { return }
         eventPipeline.start()
+        // 启动 OCR 对手卡牌识别（如果开启）
+        if ocrOpponentTracking {
+            startOpponentTracking()
+            startOCRScanLoop()
+        }
         isTracking = true
     }
 
     func stopTracking() {
         eventPipeline.stop()
+        stopOCRScanLoop()
         isTracking = false
     }
 
@@ -189,6 +199,22 @@ final class CardTrackerCore: ObservableObject {
             }
         }
         ocrScanner.scanGameWindow()
+    }
+    
+    // OCR 定时扫描循环（每 3 秒一次）
+    private var ocrScanTimer: Timer?
+    
+    private func startOCRScanLoop() {
+        stopOCRScanLoop()
+        ocrScanTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+            guard let self = self, self.isTracking, self.ocrOpponentTracking else { return }
+            self.ocrScanner.scanGameWindow()
+        }
+    }
+    
+    private func stopOCRScanLoop() {
+        ocrScanTimer?.invalidate()
+        ocrScanTimer = nil
     }
 
     /// 显示调试面板
