@@ -7,7 +7,7 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
     func updateLockState(locked: Bool) {
         guard let win = window else { return }
         updateWindowLockState(window: win, locked: locked)
-        // 锁定后自动吸附对齐
+        // 锁定（自动吸附）后对齐到游戏窗口
         if locked {
             positionNextToHearthstone()
         }
@@ -34,8 +34,6 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
             let view = OverlayView().environmentObject(core)
             window?.contentView = NSHostingView(rootView: view)
         }
-        // 设置窗口级别（浮动，可在全屏应用上方）
-        window?.level = .floating
         positionNextToHearthstone()
         window?.makeKeyAndOrderFront(nil)
         startPositionTracking()
@@ -88,6 +86,7 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
         let initialLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
         updateWindowLockState(window: window, locked: initialLocked)
         
+        window.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         window.delegate = self
 
@@ -102,20 +101,16 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
         return window
     }
     
-    /// 根据锁定状态更新窗口样式（HSTracker 方案）
+    /// 根据锁定状态更新窗口样式
+    /// - locked = true: 自动吸附模式（跟随游戏窗口）
+    /// - locked = false: 手动模式（保持用户位置）
+    /// 两种模式都可拖动、可点击、可调整大小
     private func updateWindowLockState(window: NSWindow, locked: Bool) {
-        if locked {
-            // 锁定模式：无边框、鼠标穿透、不可移动
-            window.styleMask = [.borderless, .nonactivatingPanel, .fullSizeContentView]
-            window.ignoresMouseEvents = true
-            window.isMovableByWindowBackground = false
-        } else {
-            // 解锁模式：可拖动、可调整大小、可点击
-            window.styleMask = [.titled, .miniaturizable, .resizable, .borderless, .nonactivatingPanel, .fullSizeContentView]
-            window.ignoresMouseEvents = false
-            window.isMovableByWindowBackground = true
-            window.isMovable = true
-        }
+        // 始终可点击、可拖动
+        window.styleMask = [.titled, .miniaturizable, .resizable, .borderless, .nonactivatingPanel, .fullSizeContentView]
+        window.ignoresMouseEvents = false
+        window.isMovableByWindowBackground = true
+        window.isMovable = true
     }
 
     // MARK: - Hearthstone Window Tracking
