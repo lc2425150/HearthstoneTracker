@@ -839,6 +839,55 @@ struct SettingsView: View {
                     }
                 }
             }
+
+            Section("版本信息") {
+                HStack {
+                    Text("当前版本")
+                    Spacer()
+                    Text(VersionChecker.displayVersion)
+                        .foregroundColor(.secondary)
+                }
+                
+                HStack {
+                    if let update = core.updateAvailable {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .foregroundColor(.green)
+                        Text("新版本 \(update.latestVersion) 可用")
+                            .foregroundColor(.green)
+                        Spacer()
+                        Button("下载") {
+                            NSWorkspace.shared.open(update.downloadURL)
+                        }
+                        .font(.caption)
+                        Button("忽略") {
+                            core.updateAvailable = nil
+                        }
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    } else if core.isCheckingUpdate {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                        Text("检查更新中...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("已是最新版本")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Button("检查更新") {
+                            Task { await core.checkAppUpdate() }
+                        }
+                        .font(.caption)
+                    }
+                }
+                
+                HStack {
+                    Button("在 GitHub 上查看") {
+                        VersionChecker.openDownloadPage()
+                    }
+                    .font(.caption)
+                }
+            }
         }
         .formStyle(.grouped)
         .padding()

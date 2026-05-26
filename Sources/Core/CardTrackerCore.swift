@@ -445,6 +445,21 @@ final class CardTrackerCore: ObservableObject {
             print("[Core] Failed to update deck: \(error)")
         }
     }
+    
+    @Published var updateAvailable: VersionChecker.UpdateInfo? = nil
+    @Published var isCheckingUpdate = false
+    
+    /// 检查应用版本更新
+    func checkAppUpdate() async {
+        guard !isCheckingUpdate else { return }
+        isCheckingUpdate = true
+        defer { isCheckingUpdate = false }
+        
+        let info = await VersionChecker.checkForUpdate()
+        await MainActor.run {
+            self.updateAvailable = info
+        }
+    }
 
     // MARK: - Overlay Control
 
