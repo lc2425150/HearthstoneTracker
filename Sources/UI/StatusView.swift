@@ -31,22 +31,6 @@ struct StatusView: View {
 
             Spacer()
 
-            // 悬浮窗开关按钮
-            Button(action: { core.toggleOverlay() }) {
-                Image(systemName: core.isOverlayVisible ? "rectangle.on.rectangle" : "rectangle")
-                    .font(.system(size: 12))
-                Text(core.isOverlayVisible ? "关闭悬浮窗" : "悬浮窗")
-                    .font(.system(size: 13))
-            }
-            .buttonStyle(.borderless)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(core.isOverlayVisible ? Color.accentColor.opacity(0.15) : Color.gray.opacity(0.1))
-            )
-            .help("切换记牌器悬浮窗")
-
             // 启动战网按钮
             Button(action: launchBattleNet) {
                 Text("启动战网")

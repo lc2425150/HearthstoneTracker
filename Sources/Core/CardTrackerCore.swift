@@ -94,25 +94,20 @@ final class CardTrackerCore: ObservableObject {
     @Published var aiIsAnalyzing = false
     @Published var aiError: String?
     
-    var aiProviderType: AIProviderType {
-        get { AIManager.shared.selectedProvider }
-        set { AIManager.shared.selectedProvider = newValue }
+    @Published var aiProviderType: AIProviderType = .tongyi {
+        didSet { AIManager.shared.selectedProvider = aiProviderType }
     }
-    
-    var aiApiKey: String {
-        get { AIManager.shared.apiKey }
-        set { AIManager.shared.apiKey = newValue }
+    @Published var aiApiKey: String = "" {
+        didSet { AIManager.shared.apiKey = aiApiKey }
     }
-    
-    var aiAutoAnalyze: Bool {
-        get { AIManager.shared.enableAutoAnalyze }
-        set { AIManager.shared.enableAutoAnalyze = newValue }
+    @Published var aiAutoAnalyze: Bool = false {
+        didSet { AIManager.shared.enableAutoAnalyze = aiAutoAnalyze }
     }
 
     // MARK: - UI State
 
     @Published var isOverlayVisible = false
-    @Published var windowsLocked = true {
+    @Published var windowsLocked = false {
         didSet {
             UserDefaults.standard.set(windowsLocked, forKey: "windowsLocked")
             // 立即更新悬浮窗状态
@@ -134,7 +129,7 @@ final class CardTrackerCore: ObservableObject {
         cardDataUpdater = CardDataUpdater(database: cardDatabase)
         
         // 读取卡牌尺寸和数据库来源设置
-        windowsLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        windowsLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? false
         overlayWidth = UserDefaults.standard.object(forKey: "overlayWidth") != nil ? CGFloat(UserDefaults.standard.double(forKey: "overlayWidth")) : 280
         overlayInsideGame = UserDefaults.standard.bool(forKey: "overlayInsideGame")
         overlayAutoHide = UserDefaults.standard.bool(forKey: "overlayAutoHide")
@@ -153,6 +148,10 @@ final class CardTrackerCore: ObservableObject {
         }
         
         // 延迟加载数据（在 initializeData 中完成）
+        // 从 AIManager 同步 AI 设置
+        aiProviderType = AIManager.shared.selectedProvider
+        aiApiKey = AIManager.shared.apiKey
+        aiAutoAnalyze = AIManager.shared.enableAutoAnalyze
         setupSubscriptions()
         
         // HSReplay.net 集成

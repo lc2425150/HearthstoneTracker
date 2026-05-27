@@ -11,7 +11,8 @@ actor CardImageLoader {
     private var pendingTasks: [String: Task<NSImage?, Never>] = [:]
 
     private init() {
-        memoryCache.countLimit = 200
+        memoryCache.countLimit = 100  // 减少内存占用
+        memoryCache.totalCostLimit = 50 * 1024 * 1024  // 50MB 上限
 
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
         cacheDir = caches.appendingPathComponent("HearthstoneTracker/CardImages")
@@ -47,7 +48,7 @@ actor CardImageLoader {
                 return nil
             }
 
-            let req = URLRequest(url: url, timeoutInterval: 8)
+            let req = URLRequest(url: url, timeoutInterval: 5)
             do {
                 let (data, _) = try await URLSession.shared.data(for: req)
                 if let image = NSImage(data: data) {

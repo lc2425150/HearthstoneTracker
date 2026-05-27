@@ -96,7 +96,7 @@ struct OverlayView: View {
                     Image(systemName: core.windowsLocked ? "lock.fill" : "lock.open")
                         .font(.system(size: 10))
                 }
-                .help(core.windowsLocked ? "已吸附（关闭可手动拖拽）" : "手动模式（点击切换自动吸附）")
+                .help(core.windowsLocked ? "自动吸附" : "手动拖拽")
 
                 Button(action: { core.toggleOverlay() }) {
                     Image(systemName: "xmark")

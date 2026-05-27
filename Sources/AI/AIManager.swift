@@ -20,7 +20,7 @@ final class AIManager: ObservableObject {
     }
     
     private var lastAnalysisTime: Date?
-    private let minInterval: TimeInterval = 10 // 最小分析间隔：10秒
+    private let minInterval: TimeInterval = 20 // 最小分析间隔：10秒
     
     private init() {
         if let saved = UserDefaults.standard.string(forKey: "aiProviderType"),
@@ -81,30 +81,54 @@ final class AIManager: ObservableObject {
         }
     }
     
-    /// 截取 Hearthstone 窗口
+    /// 截取 Hearthstone 窗口（后台线程 + 降低分辨率）
     private func captureGameScreen() -> Data? {
-        let options = CGWindowListOption(arrayLiteral: .optionOnScreenOnly, .excludeDesktopElements)
-        guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
-            return nil
-        }
+        // 在后台线程执行截图
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: Data?
         
-        for info in windowList {
-            guard let ownerName = info["kCGWindowOwnerName"] as? String,
-                  ownerName == "Hearthstone" || ownerName.contains("炉石"),
-                  let boundsDict = info["kCGWindowBounds"] as? [String: CGFloat],
-                  let x = boundsDict["X"], let y = boundsDict["Y"],
-                  let w = boundsDict["Width"], let h = boundsDict["Height"],
-                  w > 300, h > 300 else { continue }
-            
-            let region = CGRect(x: x, y: y, width: w, height: h)
-            guard let cgImage = CGWindowListCreateImage(region, .optionOnScreenOnly, kCGNullWindowID, .bestResolution) else {
-                return nil
+        DispatchQueue.global(qos: .userInitiated).async {
+            let options = CGWindowListOption(arrayLiteral: .optionOnScreenOnly, .excludeDesktopElements)
+            guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
+                semaphore.signal()
+                return
             }
             
-            let bitmap = NSBitmapImageRep(cgImage: cgImage)
-            return bitmap.representation(using: .png, properties: [:])
+            for info in windowList {
+                guard let ownerName = info["kCGWindowOwnerName"] as? String,
+                      ownerName == "Hearthstone" || ownerName.contains("炉石"),
+                      let boundsDict = info["kCGWindowBounds"] as? [String: CGFloat],
+                      let x = boundsDict["X"], let y = boundsDict["Y"],
+                      let w = boundsDict["Width"], let h = boundsDict["Height"],
+                      w > 300, h > 300 else { continue }
+                
+                let region = CGRect(x: x, y: y, width: w, height: h)
+                guard let cgImage = CGWindowListCreateImage(region, .optionOnScreenOnly, kCGNullWindowID, .bestResolution) else {
+                    semaphore.signal()
+                    return
+                }
+                
+                // 缩小图片到50%以减少API传输时间
+                let smallW = Int(w / 2)
+                let smallH = Int(h / 2)
+                if let context = CGContext(data: nil, width: smallW, height: smallH,
+                                           bitsPerComponent: 8, bytesPerRow: 0,
+                                           space: CGColorSpaceCreateDeviceRGB(),
+                                           bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue) {
+                    context.interpolationQuality = .medium
+                    context.draw(cgImage, in: CGRect(x: 0, y: 0, width: smallW, height: smallH))
+                    if let resized = context.makeImage() {
+                        let bitmap = NSBitmapImageRep(cgImage: resized)
+                        result = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.7])
+                    }
+                }
+                break
+            }
+            semaphore.signal()
         }
-        return nil
+        
+        _ = semaphore.wait(timeout: .now() + 5)
+        return result
     }
     
     /// 清空建议

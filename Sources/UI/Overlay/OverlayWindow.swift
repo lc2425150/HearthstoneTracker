@@ -83,7 +83,7 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
             panel.isFloatingPanel = true
         }
         
-        let initialLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        let initialLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? false
         updateWindowLockState(window: window, locked: initialLocked)
         
         window.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
@@ -137,66 +137,63 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
     }
 
     func positionNextToHearthstone() {
-        guard let hsFrame = findHearthstoneWindow(), let win = window else {
-            // 炉石未运行，恢复普通窗口级别并放在屏幕右上角
-            window?.level = .floating
-            if let screen = NSScreen.main {
-                let sf = screen.visibleFrame
-                window?.setFrameOrigin(NSPoint(x: sf.maxX - 340, y: sf.maxY - 500))
-            }
-            return
-        }
+        guard let win = window else { return }
         
-        // 检测到炉石窗口，提升到屏蔽级别（覆盖全屏游戏）
-        window?.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
-        lastHearthstoneFrame = hsFrame
-        
-        // 如果用户正在拖拽，不自动定位
-        let locked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        // 检测炉石窗口或全屏显示模式
+        let locked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? false
         guard !isDragging, locked else { return }
-
-        let gap: CGFloat = 0
-        let overlayWidth = UserDefaults.standard.object(forKey: "overlayWidth") as? Double ?? 280
-        let insideGame = UserDefaults.standard.bool(forKey: "overlayInsideGame")
         
-        // 锁定模式下自动匹配游戏窗口高度
-        let overlayHeight = hsFrame.height * 0.92
-        let newSize = NSSize(width: overlayWidth, height: overlayHeight)
-        win.setContentSize(newSize)
+        if let hsFrame = findHearthstoneWindow() {
+            // 检测到炉石窗口（窗口模式或全屏），提升到屏蔽级别
+            win.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
+            lastHearthstoneFrame = hsFrame
+            
+            let overlayWidth = UserDefaults.standard.object(forKey: "overlayWidth") as? Double ?? 280
+            let insideGame = UserDefaults.standard.bool(forKey: "overlayInsideGame")
+            
+            // 匹配游戏窗口高度
+            let overlayHeight = hsFrame.height * 0.92
+            win.setContentSize(NSSize(width: overlayWidth, height: overlayHeight))
 
-        let origin: NSPoint
-        if insideGame {
-            // 游戏界面内部
-            switch preferredSide {
-            case .right:
-                origin = NSPoint(
-                    x: hsFrame.maxX - overlayWidth - 10,
-                    y: hsFrame.minY + hsFrame.height * 0.04
-                )
-            case .left:
-                origin = NSPoint(
-                    x: hsFrame.minX + 10,
-                    y: hsFrame.minY + hsFrame.height * 0.04
-                )
+            let origin: NSPoint
+            if insideGame {
+                switch preferredSide {
+                case .right:
+                    origin = NSPoint(x: hsFrame.maxX - overlayWidth - 10, y: hsFrame.minY + hsFrame.height * 0.04)
+                case .left:
+                    origin = NSPoint(x: hsFrame.minX + 10, y: hsFrame.minY + hsFrame.height * 0.04)
+                }
+            } else {
+                switch preferredSide {
+                case .right:
+                    origin = NSPoint(x: hsFrame.maxX, y: hsFrame.minY)
+                case .left:
+                    origin = NSPoint(x: hsFrame.minX - overlayWidth, y: hsFrame.minY)
+                }
             }
+            win.setFrameOrigin(origin)
         } else {
-            // 游戏窗口外侧
-            switch preferredSide {
-            case .right:
-                origin = NSPoint(
-                    x: hsFrame.maxX + gap,
-                    y: hsFrame.minY
-                )
-            case .left:
-                origin = NSPoint(
-                    x: hsFrame.minX - overlayWidth - gap,
-                    y: hsFrame.minY
-                )
+            // 未找到炉石窗口：检查是否在全屏显示模式
+            // 使用 CGShieldingWindowLevel 保持覆盖全屏应用
+            win.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
+            
+            // 放在屏幕左侧或右侧（全屏时贴合屏幕边缘）
+            if let screen = NSScreen.main {
+                let sf = screen.frame
+                let overlayWidth = UserDefaults.standard.object(forKey: "overlayWidth") as? Double ?? 280
+                let overlayHeight = sf.height * 0.92
+                win.setContentSize(NSSize(width: overlayWidth, height: overlayHeight))
+                
+                let origin: NSPoint
+                switch preferredSide {
+                case .right:
+                    origin = NSPoint(x: sf.maxX - overlayWidth, y: sf.minY)
+                case .left:
+                    origin = NSPoint(x: sf.minX, y: sf.minY)
+                }
+                win.setFrameOrigin(origin)
             }
         }
-
-        win.setFrameOrigin(origin)
-        win.setContentSize(newSize)
     }
 
     private var wasHearthstoneActive = false
@@ -204,7 +201,7 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
     
     private func startPositionTracking() {
         positionTimer?.invalidate()
-        positionTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        positionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self, !self.isDragging else { return }
             
             // 自动隐藏：检查炉石是否是当前活跃应用
@@ -257,7 +254,7 @@ extension OverlayWindowController: NSWindowDelegate {
         isDragging = false
         
         // 解锁模式下不自动吸附，保持用户拖拽位置
-        let locked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? true
+        let locked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? false
         if !locked { return }
         
         guard let win = window, let hsFrame = findHearthstoneWindow() else { return }
