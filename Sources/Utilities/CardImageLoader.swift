@@ -34,16 +34,16 @@ actor CardImageLoader {
 
         let task = Task<NSImage?, Never> { [weak self] in
             guard let self else { return nil }
-            // 磁盘缓存
-            let fileURL = await self.cacheDir.appendingPathComponent("\(cardId).png")
+            // 磁盘缓存（actor 上下文内，可直接调用 actor 方法）
+            let fileURL = await self.diskCacheURL(for: cardId)
             if FileManager.default.fileExists(atPath: fileURL.path),
                let diskImage = NSImage(contentsOf: fileURL) {
-                await self.cache(diskImage, for: cardId)
+                await self.cacheMemory(image: diskImage, for: cardId)
                 return diskImage
             }
 
             // 网络下载
-            guard let url = URL(string: "\(await self.baseURL)/\(cardId).png") else {
+            guard let url = URL(string: "\(self.baseURL)/\(cardId).png") else {
                 return nil
             }
 
@@ -52,7 +52,7 @@ actor CardImageLoader {
                 let (data, _) = try await URLSession.shared.data(for: req)
                 if let image = NSImage(data: data) {
                     try? data.write(to: fileURL, options: .atomic)
-                    await self.cache(image, for: cardId)
+                    await self.cacheMemory(image: image, for: cardId)
                     return image
                 }
             } catch {
@@ -67,8 +67,16 @@ actor CardImageLoader {
         return result
     }
 
-    private func cache(_ image: NSImage, for cardId: String) {
+    // MARK: - Private
+
+    /// 缓存到内存
+    private func cacheMemory(image: NSImage, for cardId: String) {
         memoryCache.setObject(image, forKey: cardId as NSString)
+    }
+
+    /// 磁盘缓存路径
+    private func diskCacheURL(for cardId: String) -> URL {
+        cacheDir.appendingPathComponent("\(cardId).png")
     }
 
     /// 清除所有缓存文件

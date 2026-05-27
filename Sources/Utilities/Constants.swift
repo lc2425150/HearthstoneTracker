@@ -5,7 +5,7 @@ enum Constants {
     // MARK: - App
 
     static let appName = "HearthstoneTracker"
-    static let appVersion = "1.2.0"
+    static let appVersion = "1.3.0"
 
     // MARK: - File Paths
 

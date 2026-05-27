@@ -12,6 +12,20 @@ struct ContentView: View {
             HStack {
                 StatusView()
                 Spacer()
+                // AI 出牌建议按钮
+                Button(action: {
+                    AISuggestionWindowController.shared.toggle()
+                    if !core.aiIsAnalyzing && AIManager.shared.lastSuggestion == nil {
+                        core.requestAIAnalysis()
+                    }
+                }) {
+                    Label("AI建议", systemImage: "wand.and.stars")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.purple)
+                .controlSize(.small)
+                
                 // 悬浮窗切换按钮（突出显示）
                 Button(action: {
                     OverlayWindowController.shared.toggle(core: core)
@@ -837,6 +851,42 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                             .font(.caption)
                     }
+                }
+            }
+
+            Section("AI 出牌助手") {
+                Picker("AI 模型", selection: $core.aiProviderType) {
+                    ForEach(AIProviderType.allCases, id: \.self) { provider in
+                        HStack {
+                            Text(provider.displayName)
+                            Text(provider.modelName)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                        .tag(provider)
+                    }
+                }
+                .pickerStyle(.menu)
+                
+                SecureField("API Key", text: $core.aiApiKey)
+                    .font(.caption)
+                
+                Toggle("自动分析（每回合切换时）", isOn: $core.aiAutoAnalyze)
+                    .help("每回合开始时自动截图分析对局")
+                
+                HStack {
+                    if core.aiIsAnalyzing {
+                        ProgressView().scaleEffect(0.5)
+                        Text("分析中...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Button("测试连接") {
+                        Task { await AIManager.shared.analyzeGameScreen() }
+                    }
+                    .font(.caption)
+                    .disabled(core.aiApiKey.isEmpty)
                 }
             }
 

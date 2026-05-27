@@ -4,6 +4,9 @@
 
 macOS 炉石记牌器，Swift/SwiftUI + AppKit，支持 macOS 14.0+ (arm64)
 
+**当前版本**: 1.3.0 (build 9)
+**更新日期**: 2026-05-26
+
 ## 技术栈
 
 | 模块 | 技术 |
@@ -50,50 +53,57 @@ Sources/
 │       ├── OverlayView.swift      # 悬浮窗主视图
 │       └── OverlayWindow.swift    # 悬浮窗窗口管理器
 └── Utilities/
-    ├── CardImageLoader.swift      # 卡牌图片加载 Actor
-    ├── Constants.swift            # 常量
-    ├── DeckCodeParser.swift       # 卡组码解析
-    ├── GameLauncher.swift         # 游戏启动器
-    ├── HSReplayManager.swift      # HSReplay OAuth + 上传
-    └── VersionChecker.swift       # 版本检查
+│   ├── CardImageLoader.swift      # 卡牌图片加载 Actor
+│   ├── Constants.swift            # 常量
+│   ├── DeckCodeParser.swift       # 卡组码解析
+│   ├── GameLauncher.swift         # 游戏启动器
+│   ├── HSReplayManager.swift      # HSReplay OAuth + 上传
+│   └── VersionChecker.swift       # 版本检查
+└── Tests/
+    └── CoreTests.swift            # 单元测试 (43 测试用例)
+    └── TestRunner.swift           # 测试入口
 ```
 
-## 关键数据模型
+## 版本历史
 
-### TrackedDeck (struct)
-- `cardCounts: [Int: Int]` — dbfId → 剩余张数
-- `cardPool: [Int: Card]` — dbfId → Card 对象
-- `allOriginalCards: [(card: Card, count: Int)]` — 全部原始卡牌含数量
-- `remainingOriginal: [Card]` — 牌库中还有剩余张数的卡牌
-- `handOriginal: [Card]` — 手牌
-- `playedOriginal: [Card]` — 已打出
-- `discoveredCards: [DiscoveredCard]` — 发现/生成的卡牌
+| 版本 | Build | 日期 | 变更内容 |
+|------|-------|------|----------|
+| 1.0.0 | 1 | 2025-05-23 | 初始版本 |
+| 1.1.0 | 3 | 2025-05-24 | 添加覆盖层窗口、OCR扫描、对手追踪 |
+| 1.2.0 | 8 | 2025-05-26 | 添加卡组库、统计、设置面板、HSReplay集成 |
+| **1.3.0** | **9** | **2026-05-26** | 参考 HSTracker 架构优化：修复所有编译器警告、添加 XCTest 兼容单元测试、优化 VisionOCR 非隔离截图、修复 Actor 并发问题、统一版本管理 |
 
-### CardDatabase (@MainActor)
-- 管理 ModelContainer
-- fetchMatches() / fetchDecks() / card(for dbfId:)
+## 参考项目
+
+本项目参考了 [HearthSim/HSTracker](https://github.com/HearthSim/HSTracker) (⭐1247) 的设计模式：
+
+| 特性 | HSTracker 方案 | 本实现方案 |
+|------|---------------|-----------|
+| 数据库 | Realm (Swift) | SwiftData (@Model) |
+| 依赖管理 | Carthage + Mono | 零外部依赖 |
+| 内存读取 | HearthMirror (C#) | Vision OCR (Apple) |
+| 更新 | Sparkle | GitHub Releases |
+| 构建 | Xcode + Fastlane | swiftc 命令行 |
+| 测试 | XCTest | 独立测试套件 (43用例) |
 
 ## 构建方式
 
 ```bash
 cd /Users/achen/Documents/炉石传说记牌器
+
+# 编译生产版本
 bash build_dmg.sh
+
+# 运行单元测试
+# 编译测试：
+XCODE_SDK="/Volumes/T7/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
+XCODE_SWIFT="/Volumes/T7/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+SOURCES=(); while IFS= read -r f; do [[ "$f" != *App.swift ]] && SOURCES+=("$f"); done < <(find Sources Tests -name "*.swift" -type f | sort)
+$XCODE_SWIFT -o .build/tests -target arm64-apple-macos14.0 -sdk "$XCODE_SDK" -parse-as-library -Onone -num-threads 1 \
+  -framework SwiftUI -framework AppKit -framework Foundation -framework Combine -framework Vision \
+  -framework UniformTypeIdentifiers -framework CoreGraphics -framework CoreFoundation -framework SwiftData "${SOURCES[@]}"
+./.build/tests
 ```
-
-- 编译器: `/Volumes/T7/Applications/Xcode.app` 中的 swiftc
-- SDK: macOS 14.0
-- 架构: arm64
-- 单线程编译防 OOM（`-num-threads 1`）
-- 输出: `.build/HearthstoneTracker.dmg`
-
-## GitHub 同步
-
-```bash
-cd /Users/achen/Documents/炉石传说记牌器
-git add -A && git commit -m "描述变更" && git push origin main
-```
-
-- 每次版本改动后先同步 GitHub，再进行后续开发
 
 ## 编码规范
 
@@ -104,6 +114,7 @@ git add -A && git commit -m "描述变更" && git push origin main
 5. **私有属性**：TrackedDeck.cardCounts/cardPool 不应 private(set)，因为 CardTrackerCore 需要在外部修改
 6. **卡牌数据来源 URL** 使用 zhCN 以获取中文卡牌名
 7. **全屏支持**使用 `fullScreenAuxiliary` + `CGShieldingWindowLevel`
+8. **Actor 并发**：CardImageLoader 使用 actor 隔离，后台截图使用 fileprivate 函数避免 @MainActor 约束
 
 ## 常见问题
 
@@ -113,3 +124,5 @@ git add -A && git commit -m "描述变更" && git push origin main
 | 卡牌 25 张显示 | 唯一卡牌去重统计 | 用 `allOriginalCards` + count 徽章 |
 | 启动卡顿 | ModelContainer 同步初始化 | 改用 lazy 初始化 |
 | 悬浮窗不贴合 | 窗口位置追踪逻辑 | OverlayWindow.positionNextToHearthstone() |
+| codesign 失败 | .DS_Store 或资源分支 | 运行 `xattr -cr AppBundle` 后重试 |
+| CGWindowListCreateImage 废弃 | macOS 14.0+ API 变更 | 后续迁移至 ScreenCaptureKit |

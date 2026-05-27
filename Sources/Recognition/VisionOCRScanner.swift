@@ -4,6 +4,19 @@ import AppKit
 import SwiftData
 import Combine
 
+// MARK: - 屏幕截取辅助（非 MainActor 隔离）
+/// 在后台线程安全调用，无 @MainActor 依赖
+private func captureWindowScreenshot(region: CGRect) -> CGImage? {
+    let listOption: CGWindowListOption = .optionOnScreenOnly
+    let imageOption: CGWindowImageOption = .bestResolution
+    // TODO: CGWindowListCreateImage 在 macOS 14.0+ 已废弃，后续迁移至 ScreenCaptureKit
+    let cgImage = CGWindowListCreateImage(region, listOption, kCGNullWindowID, imageOption)
+    if cgImage == nil {
+        print("[OCR] Failed to capture screen region")
+    }
+    return cgImage
+}
+
 /// Vision OCR 扫描器：对屏幕区域截图进行文字识别，匹配卡牌名称
 @MainActor
 final class VisionOCRScanner {
@@ -22,17 +35,19 @@ final class VisionOCRScanner {
     /// 扫描指定区域（Cocoa 坐标系）
     func scan(region: CGRect) {
         recognitionQueue.async { [weak self] in
-            self?.captureAndRecognize(region: region)
+            guard let self else { return }
+            // 在后台线程截取屏幕（调用文件私有函数，非 @MainActor）
+            let cgImage = captureWindowScreenshot(region: region)
+            guard let cgImage else { return }
+            // 主线程进行识别
+            Task { @MainActor [weak self] in
+                self?.recognize(cgImage: cgImage)
+            }
         }
     }
 
-    /// 扫描当前前台窗口的整个区域
-    func scanFullScreen() {
-        guard let screen = NSScreen.main else { return }
-        scan(region: screen.frame)
-    }
-
-    /// 扫描炉石游戏窗口（查找 Hearthstone 进程窗口）
+    /// 扫描炉石游戏窗口
+    @MainActor
     func scanGameWindow() {
         guard let window = findHearthstoneWindow() else {
             print("[OCR] Hearthstone window not found")
@@ -41,19 +56,7 @@ final class VisionOCRScanner {
         scan(region: window)
     }
 
-    // MARK: - Private Capture
-
-    private func captureAndRecognize(region: CGRect) {
-        // 使用 CGWindowListCreateImage 截取指定区域
-        let listOption: CGWindowListOption = .optionOnScreenOnly
-        let imageOption: CGWindowImageOption = .bestResolution
-        guard let cgImage = CGWindowListCreateImage(region, listOption, kCGNullWindowID, imageOption) else {
-            print("[OCR] Failed to capture screen region")
-            return
-        }
-
-        recognize(cgImage: cgImage)
-    }
+    // MARK: - Private Recognition
 
     private func recognize(cgImage: CGImage) {
         let request = VNRecognizeTextRequest { [weak self] request, error in
@@ -64,11 +67,10 @@ final class VisionOCRScanner {
             self?.processResults(request.results)
         }
 
-        // 配置识别参数
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
         request.recognitionLanguages = ["zh-Hans", "en-US"]
-        request.minimumTextHeight = 0.01  // 极小文字也尝试识别
+        request.minimumTextHeight = 0.01
 
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
         do {
@@ -89,10 +91,8 @@ final class VisionOCRScanner {
             guard let candidate = observation.topCandidates(1).first else { continue }
             let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
 
-            // 跳过过短或无意义的文本
             guard text.count >= 2 else { continue }
 
-            // 在卡牌数据库中搜索匹配
             let matchedCards = fuzzyMatchCard(text: text)
 
             for card in matchedCards {
@@ -105,7 +105,6 @@ final class VisionOCRScanner {
             }
         }
 
-        // 去重：同一卡牌多次识别只保留置信度最高的
         let unique = deduplicate(ocrResults)
 
         DispatchQueue.main.async { [weak self] in
@@ -119,25 +118,21 @@ final class VisionOCRScanner {
         let normalized = text.lowercased().trimmingCharacters(in: .whitespaces)
         var matches: [Card] = []
 
-        // 精确匹配
         if let exact = cardDatabase.card(forName: text) {
             matches.append(exact)
             return matches
         }
 
-        // 模糊匹配：搜索所有卡牌名称
         let allCards = cardDatabase.allCards
 
         for card in allCards {
             let cardName = card.name.lowercased()
 
-            // 包含匹配
             if cardName.contains(normalized) || normalized.contains(cardName) {
                 matches.append(card)
                 continue
             }
 
-            // 编辑距离匹配（允许 2 个字符的差异）
             if levenshteinDistance(normalized, cardName) <= 2 {
                 matches.append(card)
             }
@@ -187,6 +182,7 @@ final class VisionOCRScanner {
 
     // MARK: - Window Detection
 
+    @MainActor
     private func findHearthstoneWindow() -> CGRect? {
         let options = CGWindowListOption(arrayLiteral: .optionOnScreenOnly)
         guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {

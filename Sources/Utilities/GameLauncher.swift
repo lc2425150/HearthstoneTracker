@@ -90,7 +90,7 @@ final class GameLauncher: ObservableObject, @unchecked Sendable {
         }
         
         let pid = app.processIdentifier
-        let gameWindows = windowList.filter { window in
+        _ = windowList.filter { window in
             guard let windowPid = window[kCGWindowOwnerPID as String] as? Int32 else { return false }
             return windowPid == pid
         }
@@ -113,11 +113,11 @@ final class GameLauncher: ObservableObject, @unchecked Sendable {
     
     private func startMonitoring() {
         // 立即检查一次
-        checkGameRunning()
+        _ = checkGameRunning()
         
         // 定时检查
         timer = Timer.scheduledTimer(withTimeInterval: updateInterval, repeats: true) { [weak self] _ in
-            self?.checkGameRunning()
+            _ = self?.checkGameRunning()
         }
     }
     

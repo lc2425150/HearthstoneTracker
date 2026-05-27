@@ -88,6 +88,27 @@ final class CardTrackerCore: ObservableObject {
     let opponentTracker: OpponentCardTracker
     let gameLauncher = GameLauncher.shared
 
+    // MARK: - AI Assistant
+
+    @Published var aiSuggestion: AISuggestion?
+    @Published var aiIsAnalyzing = false
+    @Published var aiError: String?
+    
+    var aiProviderType: AIProviderType {
+        get { AIManager.shared.selectedProvider }
+        set { AIManager.shared.selectedProvider = newValue }
+    }
+    
+    var aiApiKey: String {
+        get { AIManager.shared.apiKey }
+        set { AIManager.shared.apiKey = newValue }
+    }
+    
+    var aiAutoAnalyze: Bool {
+        get { AIManager.shared.enableAutoAnalyze }
+        set { AIManager.shared.enableAutoAnalyze = newValue }
+    }
+
     // MARK: - UI State
 
     @Published var isOverlayVisible = false
@@ -209,8 +230,11 @@ final class CardTrackerCore: ObservableObject {
     private func startOCRScanLoop() {
         stopOCRScanLoop()
         ocrScanTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
-            guard let self = self, self.isTracking, self.ocrOpponentTracking else { return }
-            self.ocrScanner.scanGameWindow()
+            guard let self else { return }
+            Task { @MainActor in
+                guard self.isTracking, self.ocrOpponentTracking else { return }
+                self.ocrScanner.scanGameWindow()
+            }
         }
     }
     
@@ -488,6 +512,20 @@ final class CardTrackerCore: ObservableObject {
         isOverlayVisible = false
     }
 
+    /// 分析游戏画面（AI 出牌建议）
+    func requestAIAnalysis() {
+        guard !aiIsAnalyzing else { return }
+        aiIsAnalyzing = true
+        aiError = nil
+        
+        Task { @MainActor in
+            await AIManager.shared.analyzeGameScreen()
+            self.aiSuggestion = AIManager.shared.lastSuggestion
+            self.aiError = AIManager.shared.lastError
+            self.aiIsAnalyzing = false
+        }
+    }
+
     // MARK: - Private
 
     private func setupSubscriptions() {
@@ -505,6 +543,10 @@ final class CardTrackerCore: ObservableObject {
         eventPipeline.onGameStart
             .sink { [weak self] _ in
                 guard let self else { return }
+                // 游戏开始时自动 AI 分析
+                if self.aiAutoAnalyze {
+                    self.requestAIAnalysis()
+                }
                 // 游戏开始时自动检测剪贴板中的卡组码
                 if self.playerDeck == nil {
                     let pasteboard = NSPasteboard.general
