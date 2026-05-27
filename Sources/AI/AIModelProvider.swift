@@ -17,6 +17,7 @@ enum AIProviderType: String, CaseIterable, Codable {
     case baidu = "百度文心"
     case xunfei = "讯飞星火"
     case tencent = "腾讯混元"
+    case deepseek = "DeepSeek"
     
     var displayName: String { rawValue }
     
@@ -27,6 +28,7 @@ enum AIProviderType: String, CaseIterable, Codable {
         case .baidu:   return "ERNIE-4.0-8K-latest"
         case .xunfei:  return "spark-4.0"
         case .tencent: return "hunyuan-vision"
+        case .deepseek: return "deepseek-vl"
         }
     }
     
@@ -37,6 +39,7 @@ enum AIProviderType: String, CaseIterable, Codable {
         case .baidu:   return "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro"
         case .xunfei:  return "https://spark-api.xf-yun.com/v4.0/chat"
         case .tencent: return "https://api.hunyuan.cloud.tencent.com/v1/chat/completions"
+        case .deepseek: return "https://api.deepseek.com/v1/chat/completions"
         }
     }
 }

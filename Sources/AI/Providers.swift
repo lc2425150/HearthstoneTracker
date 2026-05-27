@@ -62,6 +62,26 @@ struct TencentProvider: AIModelProvider {
     }
 }
 
+// MARK: - DeepSeek (OpenAI 兼容接口)
+
+struct DeepSeekProvider: AIModelProvider {
+    let type: AIProviderType = .deepseek
+    let apiKey: String
+    
+    func analyzeScreenshot(imageData: Data, gameState: String?) async throws -> AISuggestion {
+        let base64 = imageData.base64EncodedString()
+        
+        let messages: [[String: Any]] = [
+            ["role": "user", "content": [
+                ["type": "image_url", "image_url": ["url": "data:image/png;base64,\(base64)"]],
+                ["type": "text", "text": "你是一个炉石传说AI助手。分析截图，给出最佳出牌建议。用中文回答，格式：建议+理由。考虑费用、场面、手牌、对手情况。"]
+            ]]
+        ]
+        
+        return try await callOpenAICompatible(endpoint: type.apiEndpoint, apiKey: apiKey, model: type.modelName, messages: messages)
+    }
+}
+
 // MARK: - 百度文心 (OAuth2 token)
 
 struct BaiduProvider: AIModelProvider {
