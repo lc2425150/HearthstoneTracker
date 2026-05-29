@@ -42,6 +42,10 @@ final class AIManager: ObservableObject {
         case .xunfei:  return XunFeiProvider(apiKey: apiKey)
         case .tencent: return TencentProvider(apiKey: apiKey)
         case .deepseek: return DeepSeekProvider(apiKey: apiKey)
+        case .kimi:     return KimiProvider(apiKey: apiKey)
+        case .doubao:   return DoubaoProvider(apiKey: apiKey)
+        case .yi:       return YiProvider(apiKey: apiKey)
+        case .baichuan: return BaichuanProvider(apiKey: apiKey)
         case .openai:  return OpenAIProvider(apiKey: apiKey)
         }
     }
