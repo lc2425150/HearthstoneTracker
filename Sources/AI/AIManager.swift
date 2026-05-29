@@ -20,7 +20,7 @@ final class AIManager: ObservableObject {
     }
     
     private var lastAnalysisTime: Date?
-    private let minInterval: TimeInterval = 20 // 最小分析间隔：10秒
+    private let minInterval: TimeInterval = 8 // 最小分析间隔：8秒（实时模式）
     
     private init() {
         if let saved = UserDefaults.standard.string(forKey: "aiProviderType"),
@@ -133,6 +133,50 @@ final class AIManager: ObservableObject {
     }
     
 
+    /// 实时分析对局状态（基于文本状态，无需截图）
+    func analyzeRealTime(core: CardTrackerCore) async {
+        guard !isAnalyzing else { return }
+        
+        // 频率限制：8秒内不重复分析
+        if let last = lastAnalysisTime, Date().timeIntervalSince(last) < minInterval {
+            return
+        }
+        
+        isAnalyzing = true
+        lastError = nil
+        
+        let gameState = await GameStateFormatter.format(core: core)
+        let req = await RealTimeAnalysisRequest.from(core: core)
+        
+        let prompt = """
+你是一个炉石传说实时对局AI助手。根据当前对局状态，给出最优打法建议。
+分析时要考虑：费用曲线、场面交换、手牌管理、对手可能的手牌和卡组类型。
+最多给出2条建议，每条一行，格式为"建议|[理由]"。
+
+当前对局状态:
+\(gameState)
+
+对手手牌约\(req.opponentHandSize)张，推测使用\(req.opponentManaUsed)费。
+"""
+        
+        do {
+            let provider = try currentProvider()
+            let suggestion = try await provider.analyzeMatchData(matchSummary: prompt)
+            
+            await MainActor.run {
+                self.lastSuggestion = suggestion
+                self.lastAnalysisTime = Date()
+                self.isAnalyzing = false
+                NotificationCenter.default.post(name: .newAISuggestion, object: suggestion)
+            }
+        } catch {
+            await MainActor.run {
+                self.lastError = error.localizedDescription
+                self.isAnalyzing = false
+            }
+        }
+    }
+    
     /// 分析赛后数据
     func analyzeMatchRecord(playerClass: String, opponentClass: String,
                             result: String, duration: Int,

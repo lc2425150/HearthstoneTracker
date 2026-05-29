@@ -26,7 +26,7 @@ final class AISuggestionWindowController: NSObject, NSWindowDelegate {
     
     private func createWindow() -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 280),
             styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView, .resizable],
             backing: .buffered,
             defer: false
@@ -44,29 +44,30 @@ final class AISuggestionWindowController: NSObject, NSWindowDelegate {
             panel.isFloatingPanel = true
         }
         
-        window.contentMinSize = NSSize(width: 280, height: 120)
+        window.contentMinSize = NSSize(width: 280, height: 160)
         window.contentMaxSize = NSSize(width: 500, height: 500)
         
         let hostingView = NSHostingView(rootView: AIPanelView())
         hostingView.translatesAutoresizingMaskIntoConstraints = false
         window.contentView = hostingView
         
-        // 放在屏幕右中位置
         if let screen = NSScreen.main {
             let sf = screen.visibleFrame
-            window.setFrameOrigin(NSPoint(x: sf.maxX - 360, y: sf.midY - 100))
+            window.setFrameOrigin(NSPoint(x: sf.maxX - 380, y: sf.midY - 140))
         }
         
         return window
     }
 }
 
-/// AI 建议面板视图
+/// AI 建议面板视图（实时对局分析）
 struct AIPanelView: View {
     @StateObject private var aiManager = AIManager.shared
+    @EnvironmentObject var core: CardTrackerCore
     @State private var suggestion: AISuggestion?
     @State private var isAnalyzing = false
     @State private var errorMessage: String?
+    @State private var statusSummary: String = ""
     
     var body: some View {
         ZStack {
@@ -74,18 +75,24 @@ struct AIPanelView: View {
                 .fill(Color.black.opacity(0.85))
                 .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 2)
             
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 // 标题栏
                 HStack {
                     Image(systemName: "wand.and.stars")
                         .font(.system(size: 12))
                         .foregroundColor(.purple)
-                    Text("AI 出牌建议")
+                    Text("AI 实时分析")
                         .font(.caption).bold()
                         .foregroundColor(.white.opacity(0.9))
                     Spacer()
+                    if !statusSummary.isEmpty {
+                        Text(statusSummary)
+                            .font(.system(size: 8))
+                            .foregroundColor(.white.opacity(0.5))
+                            .lineLimit(1)
+                    }
                     Text(aiManager.selectedProvider.displayName)
-                        .font(.system(size: 8))
+                        .font(.system(size: 7))
                         .foregroundColor(.purple.opacity(0.6))
                         .padding(.horizontal, 4)
                         .background(Color.purple.opacity(0.15))
@@ -101,12 +108,33 @@ struct AIPanelView: View {
                 
                 Divider().background(Color.white.opacity(0.2))
                 
+                // 状态概览
+                if let deck = core.playerDeck {
+                    HStack(spacing: 8) {
+                        Label("\(deck.heroClass.displayName)", systemImage: "person.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.white.opacity(0.7))
+                        Label("手牌\(deck.handOriginal.count)", systemImage: "hand.raised.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.white.opacity(0.7))
+                        Label("牌库\(deck.remainingOriginalCount)", systemImage: "rectangle.stack.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.white.opacity(0.7))
+                        Spacer()
+                        if aiManager.lastSuggestion != nil {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 9))
+                                .foregroundColor(.green)
+                        }
+                    }
+                }
+                
                 // 内容
                 if isAnalyzing {
                     HStack(spacing: 8) {
                         ProgressView()
                             .scaleEffect(0.6)
-                        Text("分析中...")
+                        Text("分析当前局面...")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.6))
                     }
@@ -118,15 +146,17 @@ struct AIPanelView: View {
                         .frame(maxWidth: .infinity, minHeight: 60)
                 } else if let sug = suggestion {
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 6) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            // 主要建议（一行）
                             Text(sug.suggestion)
                                 .font(.subheadline).bold()
                                 .foregroundColor(.green.opacity(0.9))
+                            
                             if !sug.reasoning.isEmpty {
                                 Text(sug.reasoning)
                                     .font(.caption)
                                     .foregroundColor(.white.opacity(0.6))
-                                    .lineLimit(6)
+                                    .lineLimit(8)
                             }
                         }
                     }
@@ -136,9 +166,14 @@ struct AIPanelView: View {
                         Image(systemName: "wand.and.stars")
                             .font(.system(size: 20))
                             .foregroundColor(.white.opacity(0.3))
-                        Text("点击分析获取出牌建议")
+                        Text("等待分析...")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.4))
+                        if !core.aiApiKey.isEmpty {
+                            Text("抽牌或出牌时将自动分析")
+                                .font(.system(size: 9))
+                                .foregroundColor(.white.opacity(0.3))
+                        }
                     }
                     .frame(maxWidth: .infinity, minHeight: 60)
                 }
@@ -150,19 +185,17 @@ struct AIPanelView: View {
                     Button(action: {
                         errorMessage = nil
                         isAnalyzing = true
-                        Task {
-                            await aiManager.analyzeGameScreen()
-                            await MainActor.run {
-                                suggestion = aiManager.lastSuggestion
-                                errorMessage = aiManager.lastError
-                                isAnalyzing = false
-                            }
+                        Task { @MainActor in
+                            core.requestAIAnalysis()
+                            suggestion = aiManager.lastSuggestion
+                            errorMessage = aiManager.lastError
+                            isAnalyzing = aiManager.isAnalyzing
                         }
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 10))
-                            Text("分析")
+                            Text("刷新")
                                 .font(.caption)
                         }
                         .padding(.horizontal, 8)
@@ -173,25 +206,44 @@ struct AIPanelView: View {
                     .buttonStyle(.plain)
                     .disabled(isAnalyzing)
                     
-                    Spacer()
-                    
                     if suggestion != nil {
                         Text("\(suggestion!.timestamp.formatted(date: .omitted, time: .shortened))")
                             .font(.system(size: 8))
                             .foregroundColor(.white.opacity(0.3))
                     }
+                    
+                    Spacer()
+                    
+                    // 自动分析状态指示
+                    HStack(spacing: 3) {
+                        Circle()
+                            .fill(aiManager.enableAutoAnalyze ? Color.green : Color.gray)
+                            .frame(width: 5, height: 5)
+                        Text(aiManager.enableAutoAnalyze ? "自动" : "手动")
+                            .font(.system(size: 8))
+                            .foregroundColor(.white.opacity(0.4))
+                    }
                 }
             }
             .padding(12)
         }
-        .frame(minWidth: 280, minHeight: 120)
+        .frame(minWidth: 280, minHeight: 160)
         .onReceive(NotificationCenter.default.publisher(for: .newAISuggestion)) { notification in
             if let sug = notification.object as? AISuggestion {
                 suggestion = sug
                 isAnalyzing = false
                 errorMessage = nil
-                // 自动显示窗口
                 AISuggestionWindowController.shared.show()
+            }
+        }
+        .onReceive(core.$playerDeck) { deck in
+            if let deck = deck {
+                statusSummary = "\(deck.handOriginal.count)手 | \(deck.remainingOriginalCount)库"
+            }
+        }
+        .onAppear {
+            if let deck = core.playerDeck {
+                statusSummary = "\(deck.handOriginal.count)手 | \(deck.remainingOriginalCount)库"
             }
         }
     }

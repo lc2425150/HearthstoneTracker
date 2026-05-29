@@ -529,14 +529,18 @@ final class CardTrackerCore: ObservableObject {
         isOverlayVisible = false
     }
 
-    /// 分析游戏画面（AI 出牌建议）
+    /// 实时 AI 分析（基于游戏状态文本，无需截图）
     func requestAIAnalysis() {
         guard !aiIsAnalyzing else { return }
+        guard !aiApiKey.isEmpty else {
+            aiError = "请先在设置中配置 API Key"
+            return
+        }
         aiIsAnalyzing = true
         aiError = nil
         
         Task { @MainActor in
-            await AIManager.shared.analyzeGameScreen()
+            await AIManager.shared.analyzeRealTime(core: self)
             self.aiSuggestion = AIManager.shared.lastSuggestion
             self.aiError = AIManager.shared.lastError
             self.aiIsAnalyzing = false
@@ -560,9 +564,13 @@ final class CardTrackerCore: ObservableObject {
         eventPipeline.onGameStart
             .sink { [weak self] _ in
                 guard let self else { return }
-                // 游戏开始时自动 AI 分析
+                // 游戏开始时自动 AI 分析（实时模式）
                 if self.aiAutoAnalyze {
-                    self.requestAIAnalysis()
+                    Task { @MainActor in
+                        await AIManager.shared.analyzeRealTime(core: self)
+                        self.aiSuggestion = AIManager.shared.lastSuggestion
+                        self.aiIsAnalyzing = false
+                    }
                 }
                 // 游戏开始时自动检测剪贴板中的卡组码
                 if self.playerDeck == nil {
@@ -572,6 +580,24 @@ final class CardTrackerCore: ObservableObject {
                         if self.playerDeck != nil {
                             print("[AutoDeck] 已自动从剪贴板导入卡组")
                         }
+                    }
+                }
+            }
+            .store(in: &cancellables)
+        
+        // 卡牌事件触发实时 AI 分析（每回合检测手牌变化）
+        eventPipeline.cardEvents
+            .debounce(for: .seconds(2.0), scheduler: DispatchQueue.main)
+            .sink { [weak self] event in
+                guard let self, self.aiAutoAnalyze, !self.aiApiKey.isEmpty else { return }
+                // 玩家抽牌/出牌时触发分析
+                if event.player == .player, 
+                   (event.type == .draw || event.type == .play) {
+                    Task { @MainActor in
+                        await AIManager.shared.analyzeRealTime(core: self)
+                        self.aiSuggestion = AIManager.shared.lastSuggestion
+                        self.aiError = AIManager.shared.lastError
+                        self.aiIsAnalyzing = false
                     }
                 }
             }
