@@ -119,7 +119,7 @@ struct XunFeiProvider: AIModelProvider {
     
     func analyzeScreenshot(imageData: Data, gameState: String?) async throws -> AISuggestion {
         // 讯飞使用 WebSocket 协议，为简化先通过 HTTP 兼容接口
-        let base64 = imageData.base64EncodedString()
+        _ = imageData.base64EncodedString()
         
         let body: [String: Any] = [
             "model": type.modelName,
@@ -135,6 +135,37 @@ struct XunFeiProvider: AIModelProvider {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
         return try await sendRequest(request)
+    }
+}
+
+// MARK: - OpenAI (ChatGPT)
+
+struct OpenAIProvider: AIModelProvider {
+    let type: AIProviderType = .openai
+    let apiKey: String
+    
+    func analyzeScreenshot(imageData: Data, gameState: String?) async throws -> AISuggestion {
+        let base64 = imageData.base64EncodedString()
+        
+        let messages: [[String: Any]] = [
+            ["role": "system", "content": "你是一个炉石传说AI助手。分析截图中的对局情况，给出最佳出牌建议。用中文回答，格式：建议+理由。"],
+            ["role": "user", "content": [
+                ["type": "image_url", "image_url": ["url": "data:image/png;base64,\(base64)"]],
+                ["type": "text", "text": "分析当前对局，我应该怎么出牌？考虑费用、场面、手牌和对手情况。"]
+            ]]
+        ]
+        
+        return try await callOpenAICompatible(endpoint: type.apiEndpoint, apiKey: apiKey, model: type.modelName, messages: messages)
+    }
+    
+    /// 分析对局记录（文本分析，无需截图）
+    func analyzeMatchData(matchSummary: String) async throws -> AISuggestion {
+        let userMsg = "分析这局炉石对局: " + matchSummary
+        let messages: [[String: Any]] = [
+            ["role": "system", "content": "你是一个炉石传说AI分析助手。分析对局数据，给出技术总结和改进建议。用中文回答。"],
+            ["role": "user", "content": [["type": "text", "text": userMsg]]]
+        ]
+        return try await callOpenAICompatible(endpoint: type.apiEndpoint, apiKey: apiKey, model: "gpt-4o-mini", messages: messages)
     }
 }
 

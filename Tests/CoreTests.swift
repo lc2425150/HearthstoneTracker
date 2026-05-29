@@ -149,7 +149,7 @@ func testConstants() {
     print("\n⚙️ 测试常量")
     
     assertEqual(Constants.appName, "HearthstoneTracker", "应用名称")
-    assertEqual(Constants.appVersion, "1.3.0", "应用版本")
+    assertEqual(Constants.appVersion, "1.4.0", "应用版本")
     assertEqual(Constants.overlayDefaultOpacity, 0.7, "默认不透明度")
     assertEqual(Constants.overlayMinOpacity, 0.3, "最小不透明度")
     assertEqual(Constants.overlayMaxOpacity, 1.0, "最大不透明度")

@@ -24,8 +24,8 @@ final class AIManager: ObservableObject {
     
     private init() {
         if let saved = UserDefaults.standard.string(forKey: "aiProviderType"),
-           let provider = AIProviderType(rawValue: saved) {
-            if let p = AIProviderType(rawValue: saved) { selectedProvider = p }
+           let p = AIProviderType(rawValue: saved) {
+            selectedProvider = p
         }
         apiKey = UserDefaults.standard.string(forKey: "aiApiKey") ?? ""
         enableAutoAnalyze = UserDefaults.standard.bool(forKey: "aiAutoAnalyze")
@@ -42,6 +42,7 @@ final class AIManager: ObservableObject {
         case .xunfei:  return XunFeiProvider(apiKey: apiKey)
         case .tencent: return TencentProvider(apiKey: apiKey)
         case .deepseek: return DeepSeekProvider(apiKey: apiKey)
+        case .openai:  return OpenAIProvider(apiKey: apiKey)
         }
     }
     
@@ -131,8 +132,102 @@ final class AIManager: ObservableObject {
         return result
     }
     
+
+    /// 分析赛后数据
+    func analyzeMatchRecord(playerClass: String, opponentClass: String,
+                            result: String, duration: Int,
+                            playerCards: [String], opponentCards: [String],
+                            notes: String) async -> AISuggestion? {
+        guard !isAnalyzing else { return nil }
+        isAnalyzing = true
+        lastError = nil
+        
+        let matchSummary = """
+职业: \(playerClass) vs \(opponentClass)
+结果: \(result)
+时长: \(duration)秒
+我方卡牌: \(playerCards.joined(separator: ", "))
+对手卡牌: \(opponentCards.joined(separator: ", "))
+备注: \(notes)
+"""
+        
+        do {
+            let provider = try currentProvider()
+            let suggestion = try await provider.analyzeMatchData(matchSummary: matchSummary)
+            
+            await MainActor.run {
+                self.lastSuggestion = suggestion
+                self.isAnalyzing = false
+            }
+            return suggestion
+        } catch {
+            await MainActor.run {
+                self.lastError = error.localizedDescription
+                self.isAnalyzing = false
+            }
+            return nil
+        }
+    }
+    
+    /// 分析卡组
+    func analyzeDeck(heroClass: String, cards: [(name: String, count: Int)]) async -> AISuggestion? {
+        guard !isAnalyzing else { return nil }
+        isAnalyzing = true
+        lastError = nil
+        
+        let cardList = cards.map { "\($0.name) x\($0.count)" }.joined(separator: "\n")
+        let deckSummary = "职业: \(heroClass)\n卡组:\n\(cardList)"
+        
+        do {
+            let provider = try currentProvider()
+            let suggestion = try await provider.analyzeMatchData(matchSummary: "分析这套卡组的策略、优势和劣势:\n\(deckSummary)")
+            
+            await MainActor.run {
+                self.lastSuggestion = suggestion
+                self.isAnalyzing = false
+            }
+            return suggestion
+        } catch {
+            await MainActor.run {
+                self.lastError = error.localizedDescription
+                self.isAnalyzing = false
+            }
+            return nil
+        }
+    }
+    
+    /// 分析对局历史趋势
+    func analyzeMatchHistory(recentMatches: [(playerClass: String, opponentClass: String, result: String)]) async -> AISuggestion? {
+        guard !isAnalyzing else { return nil }
+        isAnalyzing = true
+        lastError = nil
+        
+        let matchList = recentMatches.enumerated().map { i, m in
+            "\(i+1). \(m.playerClass) vs \(m.opponentClass) - \(m.result)"
+        }.joined(separator: "\n")
+        let historySummary = "最近对局:\n\(matchList)"
+        
+        do {
+            let provider = try currentProvider()
+            let suggestion = try await provider.analyzeMatchData(matchSummary: "分析我的炉石对局趋势，给出改进建议:\n\(historySummary)")
+            
+            await MainActor.run {
+                self.lastSuggestion = suggestion
+                self.isAnalyzing = false
+            }
+            return suggestion
+        } catch {
+            await MainActor.run {
+                self.lastError = error.localizedDescription
+                self.isAnalyzing = false
+            }
+            return nil
+        }
+    }
+    
     /// 清空建议
     func clearSuggestion() {
+
         lastSuggestion = nil
         lastError = nil
     }

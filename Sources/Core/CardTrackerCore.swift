@@ -401,6 +401,24 @@ final class CardTrackerCore: ObservableObject {
                 await HSReplayManager.shared.uploadMatch(m, playerDeckCode: m.deckCode)
             }
         }
+        
+        // 自动 AI 赛后分析（如果配置了 API Key）
+        if !aiApiKey.isEmpty && aiAutoAnalyze {
+            let opponentCards = opponentPlayedCards.map { $0.name }
+            Task { @MainActor in
+                _ = await AIManager.shared.analyzeMatchRecord(
+                    playerClass: m.playerClass,
+                    opponentClass: m.opponentClass,
+                    result: m.result.displayName,
+                    duration: Int(m.duration),
+                    playerCards: [],
+                    opponentCards: opponentCards,
+                    notes: m.notes
+                )
+                self.aiSuggestion = AIManager.shared.lastSuggestion
+            }
+        }
+        
         currentMatch = nil
         resetMatch()
     }

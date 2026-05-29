@@ -276,6 +276,7 @@ struct SectionHeader: View {
 
 struct StatsView: View {
     @EnvironmentObject var core: CardTrackerCore
+    @State private var showAIAnalysis = false
 
     var body: some View {
         ScrollView {
@@ -322,6 +323,96 @@ struct StatsView: View {
                     .padding(.horizontal)
                 }
 
+                // AI 对局分析
+                if !core.aiApiKey.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "brain.head.profile")
+                                .foregroundColor(.purple)
+                            Text("AI 对局分析")
+                                .font(.subheadline).bold()
+                            Spacer()
+                            Button(action: { showAIAnalysis = true }) {
+                                HStack(spacing: 2) {
+                                    Text("详细分析")
+                                        .font(.caption)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 8))
+                                }
+                                .foregroundColor(.purple)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal)
+                        
+                        if let suggestion = core.aiSuggestion {
+                            HStack {
+                                Image(systemName: "sparkles")
+                                    .foregroundColor(.purple)
+                                Text(suggestion.suggestion)
+                                    .font(.caption)
+                                    .foregroundColor(.primary)
+                                    .lineLimit(2)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 6)
+                            .background(Color.purple.opacity(0.05))
+                            .cornerRadius(6)
+                            .padding(.horizontal)
+                        }
+                        
+                        HStack {
+                            if core.aiIsAnalyzing {
+                                ProgressView().scaleEffect(0.5)
+                                Text("分析中...")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Button(action: {
+                                    core.requestAIAnalysis()
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "arrow.clockwise")
+                                        Text("分析当前对局")
+                                    }
+                                    .font(.caption)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .tint(.purple)
+                                .controlSize(.small)
+                                
+                                if core.matchRecords.count >= 5 {
+                                    Button(action: {
+                                        Task {
+                                            let matches = core.matchRecords.prefix(20).map { r in
+                                                (playerClass: r.playerClass,
+                                                 opponentClass: r.opponentClass,
+                                                 result: r.result.displayName)
+                                            }
+                                            _ = await AIManager.shared.analyzeMatchHistory(recentMatches: Array(matches))
+                                            core.aiSuggestion = AIManager.shared.lastSuggestion
+                                        }
+                                    }) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                            Text("历史趋势")
+                                        }
+                                        .font(.caption)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .padding(.vertical, 8)
+                    .background(Color.purple.opacity(0.02))
+                    .cornerRadius(8)
+                    .padding(.horizontal, 4)
+                }
+                
                 // 按对手职业统计
                 if !core.matchStats.statsByOpponentClass.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
