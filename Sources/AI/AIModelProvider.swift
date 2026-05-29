@@ -126,6 +126,21 @@ extension AIModelProvider {
     }
 }
 
+/// AI 分析模式
+enum AIAnalysisMode: String, CaseIterable, Codable {
+    case auto = "自动实时分析"
+    case manual = "手动分析"
+    
+    var displayName: String { rawValue }
+    
+    var iconName: String {
+        switch self {
+        case .auto:   return "play.circle.fill"
+        case .manual: return "hand.tap.fill"
+        }
+    }
+}
+
 /// API 错误
 enum AIError: LocalizedError {
     case noApiKey

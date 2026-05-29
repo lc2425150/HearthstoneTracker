@@ -15,8 +15,8 @@ final class AIManager: ObservableObject {
     @Published var isAnalyzing = false
     @Published var lastSuggestion: AISuggestion?
     @Published var lastError: String?
-    @Published var enableAutoAnalyze = true {
-        didSet { UserDefaults.standard.set(enableAutoAnalyze, forKey: "aiAutoAnalyze") }
+    @Published var analysisMode: AIAnalysisMode = .auto {
+        didSet { UserDefaults.standard.set(analysisMode.rawValue, forKey: "aiAnalysisMode") }
     }
     
     private var lastAnalysisTime: Date?
@@ -28,7 +28,10 @@ final class AIManager: ObservableObject {
             selectedProvider = p
         }
         apiKey = UserDefaults.standard.string(forKey: "aiApiKey") ?? ""
-        enableAutoAnalyze = UserDefaults.standard.bool(forKey: "aiAutoAnalyze")
+        if let saved = UserDefaults.standard.string(forKey: "aiAnalysisMode"),
+           let mode = AIAnalysisMode(rawValue: saved) {
+            analysisMode = mode
+        }
     }
     
     /// 获取当前选中的提供商实例

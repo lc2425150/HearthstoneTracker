@@ -100,9 +100,12 @@ final class CardTrackerCore: ObservableObject {
     @Published var aiApiKey: String = "" {
         didSet { AIManager.shared.apiKey = aiApiKey }
     }
-    @Published var aiAutoAnalyze: Bool = false {
-        didSet { AIManager.shared.enableAutoAnalyze = aiAutoAnalyze }
+    @Published var aiAnalysisMode: AIAnalysisMode = .auto {
+        didSet { AIManager.shared.analysisMode = aiAnalysisMode }
     }
+    
+    /// 自动模式下的定时器
+    private var realTimeAnalysisTimer: Timer? 
 
     // MARK: - UI State
 
@@ -151,7 +154,7 @@ final class CardTrackerCore: ObservableObject {
         // 从 AIManager 同步 AI 设置
         aiProviderType = AIManager.shared.selectedProvider
         aiApiKey = AIManager.shared.apiKey
-        aiAutoAnalyze = AIManager.shared.enableAutoAnalyze
+        aiAnalysisMode = AIManager.shared.analysisMode
         setupSubscriptions()
         
         // HSReplay.net 集成
@@ -190,12 +193,15 @@ final class CardTrackerCore: ObservableObject {
             startOpponentTracking()
             startOCRScanLoop()
         }
+        // 自动模式下启动实时分析定时器
+        startRealTimeAnalysis()
         isTracking = true
     }
 
     func stopTracking() {
         eventPipeline.stop()
         stopOCRScanLoop()
+        stopRealTimeAnalysis()
         isTracking = false
     }
 
@@ -403,7 +409,7 @@ final class CardTrackerCore: ObservableObject {
         }
         
         // 自动 AI 赛后分析（如果配置了 API Key）
-        if !aiApiKey.isEmpty && aiAutoAnalyze {
+        if !aiApiKey.isEmpty && aiAnalysisMode == .auto {
             let opponentCards = opponentPlayedCards.map { $0.name }
             Task { @MainActor in
                 _ = await AIManager.shared.analyzeMatchRecord(
@@ -421,6 +427,10 @@ final class CardTrackerCore: ObservableObject {
         
         currentMatch = nil
         resetMatch()
+        // 重置后重启定时器
+        if aiAnalysisMode == .auto {
+            startRealTimeAnalysis()
+        }
     }
 
     func loadMatchHistory() {
@@ -529,7 +539,7 @@ final class CardTrackerCore: ObservableObject {
         isOverlayVisible = false
     }
 
-    /// 实时 AI 分析（基于游戏状态文本，无需截图）
+    /// 手动触发 AI 分析（两种模式下均可使用）
     func requestAIAnalysis() {
         guard !aiIsAnalyzing else { return }
         guard !aiApiKey.isEmpty else {
@@ -545,6 +555,27 @@ final class CardTrackerCore: ObservableObject {
             self.aiError = AIManager.shared.lastError
             self.aiIsAnalyzing = false
         }
+    }
+    
+    /// 启动自动实时分析定时器（仅自动模式）
+    private func startRealTimeAnalysis() {
+        stopRealTimeAnalysis()
+        guard aiAnalysisMode == .auto, !aiApiKey.isEmpty else { return }
+        realTimeAnalysisTimer = Timer.scheduledTimer(withTimeInterval: 8.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                await AIManager.shared.analyzeRealTime(core: self)
+                self.aiSuggestion = AIManager.shared.lastSuggestion
+                self.aiError = AIManager.shared.lastError
+                self.aiIsAnalyzing = false
+            }
+        }
+    }
+    
+    /// 停止自动实时分析定时器
+    private func stopRealTimeAnalysis() {
+        realTimeAnalysisTimer?.invalidate()
+        realTimeAnalysisTimer = nil
     }
 
     // MARK: - Private
@@ -565,7 +596,7 @@ final class CardTrackerCore: ObservableObject {
             .sink { [weak self] _ in
                 guard let self else { return }
                 // 游戏开始时自动 AI 分析（实时模式）
-                if self.aiAutoAnalyze {
+                if self.aiAnalysisMode == .auto {
                     Task { @MainActor in
                         await AIManager.shared.analyzeRealTime(core: self)
                         self.aiSuggestion = AIManager.shared.lastSuggestion
@@ -589,7 +620,7 @@ final class CardTrackerCore: ObservableObject {
         eventPipeline.cardEvents
             .debounce(for: .seconds(2.0), scheduler: DispatchQueue.main)
             .sink { [weak self] event in
-                guard let self, self.aiAutoAnalyze, !self.aiApiKey.isEmpty else { return }
+                guard let self, self.aiAnalysisMode == .auto, !self.aiApiKey.isEmpty else { return }
                 // 玩家抽牌/出牌时触发分析
                 if event.player == .player, 
                    (event.type == .draw || event.type == .play) {

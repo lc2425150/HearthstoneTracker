@@ -170,7 +170,7 @@ struct AIPanelView: View {
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.4))
                         if !core.aiApiKey.isEmpty {
-                            Text("抽牌或出牌时将自动分析")
+                            Text(core.aiAnalysisMode == .auto ? "每8秒自动分析当前局面" : "点击刷新按钮手动分析")
                                 .font(.system(size: 9))
                                 .foregroundColor(.white.opacity(0.3))
                         }
@@ -214,14 +214,28 @@ struct AIPanelView: View {
                     
                     Spacer()
                     
-                    // 自动分析状态指示
-                    HStack(spacing: 3) {
-                        Circle()
-                            .fill(aiManager.enableAutoAnalyze ? Color.green : Color.gray)
-                            .frame(width: 5, height: 5)
-                        Text(aiManager.enableAutoAnalyze ? "自动" : "手动")
+                    // 分析模式指示 + 切换
+                    HStack(spacing: 4) {
+                        Image(systemName: core.aiAnalysisMode.iconName)
                             .font(.system(size: 8))
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(core.aiAnalysisMode == .auto ? .green : .orange)
+                        Text(core.aiAnalysisMode == .auto ? "自动实时" : "手动")
+                            .font(.system(size: 8))
+                            .foregroundColor(core.aiAnalysisMode == .auto ? .green.opacity(0.7) : .orange.opacity(0.7))
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                core.aiAnalysisMode = core.aiAnalysisMode == .auto ? .manual : .auto
+                                if core.aiAnalysisMode == .auto {
+                                    core.requestAIAnalysis()
+                                }
+                            }
+                        }) {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 8))
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                        .buttonStyle(.plain)
+                        .help(core.aiAnalysisMode == .auto ? "切换到手动模式" : "切换到自动实时模式")
                     }
                 }
             }

@@ -363,44 +363,35 @@ struct StatsView: View {
                         }
                         
                         HStack {
-                            if core.aiIsAnalyzing {
-                                ProgressView().scaleEffect(0.5)
-                                Text("分析中...")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            } else {
-                                Button(action: {
-                                    core.requestAIAnalysis()
-                                }) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "arrow.clockwise")
-                                        Text("分析当前对局")
-                                    }
-                                    .font(.caption)
+                            HStack(spacing: 8) {
+                                if core.aiAnalysisMode == .auto {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.green)
+                                    Text("自动实时分析中")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Image(systemName: "hand.raised.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                    Text("手动模式")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
                                 }
-                                .buttonStyle(.borderedProminent)
-                                .tint(.purple)
-                                .controlSize(.small)
-                                
-                                if core.matchRecords.count >= 5 {
-                                    Button(action: {
-                                        Task {
-                                            let matches = core.matchRecords.prefix(20).map { r in
-                                                (playerClass: r.playerClass,
-                                                 opponentClass: r.opponentClass,
-                                                 result: r.result.displayName)
-                                            }
-                                            _ = await AIManager.shared.analyzeMatchHistory(recentMatches: Array(matches))
-                                            core.aiSuggestion = AIManager.shared.lastSuggestion
-                                        }
-                                    }) {
+                                Spacer()
+                                if core.aiIsAnalyzing {
+                                    ProgressView().scaleEffect(0.5)
+                                } else {
+                                    Button(action: { core.requestAIAnalysis() }) {
                                         HStack(spacing: 4) {
-                                            Image(systemName: "chart.line.uptrend.xyaxis")
-                                            Text("历史趋势")
+                                            Image(systemName: "arrow.clockwise")
+                                            Text("立即分析")
                                         }
                                         .font(.caption)
                                     }
-                                    .buttonStyle(.bordered)
+                                    .buttonStyle(.borderedProminent)
+                                    .tint(.purple)
                                     .controlSize(.small)
                                 }
                             }
@@ -962,8 +953,36 @@ struct SettingsView: View {
                 SecureField("API Key", text: $core.aiApiKey)
                     .font(.caption)
                 
-                Toggle("自动分析（每回合切换时）", isOn: $core.aiAutoAnalyze)
-                    .help("每回合开始时自动截图分析对局")
+                Picker("分析模式", selection: $core.aiAnalysisMode) {
+                    ForEach(AIAnalysisMode.allCases, id: \.self) { mode in
+                        HStack {
+                            Image(systemName: mode.iconName)
+                            Text(mode.displayName)
+                        }
+                        .tag(mode)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                if core.aiAnalysisMode == .auto {
+                    HStack {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        Text("每8秒自动分析当前局面，抽牌/出牌时触发")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    HStack {
+                        Image(systemName: "hand.tap.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                        Text("手动点击\"AI建议\"按钮或刷新触发分析")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
                 
                 HStack {
                     if core.aiIsAnalyzing {
