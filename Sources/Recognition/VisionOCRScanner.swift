@@ -4,20 +4,18 @@ import AppKit
 import SwiftData
 import Combine
 
-// MARK: - 屏幕截取辅助（非 MainActor 隔离）
-/// 在后台线程安全调用，无 @MainActor 依赖
-private func captureWindowScreenshot(region: CGRect) -> CGImage? {
-    let listOption: CGWindowListOption = .optionOnScreenOnly
-    let imageOption: CGWindowImageOption = .bestResolution
-    // TODO: CGWindowListCreateImage 在 macOS 14.0+ 已废弃，后续迁移至 ScreenCaptureKit
-    let cgImage = CGWindowListCreateImage(region, listOption, kCGNullWindowID, imageOption)
+// MARK: - 屏幕截取降级方案
+/// 仅在 ScreenCaptureKit 不可用时调用
+private func captureWindowScreenshotLegacy(region: CGRect) -> CGImage? {
+    let cgImage = CGWindowListCreateImage(region, .optionOnScreenOnly, kCGNullWindowID, .bestResolution)
     if cgImage == nil {
-        print("[OCR] Failed to capture screen region")
+        print("[OCR] Legacy capture failed (x=\(region.origin.x), y=\(region.origin.y), w=\(region.size.width), h=\(region.size.height))")
     }
     return cgImage
 }
 
 /// Vision OCR 扫描器：对屏幕区域截图进行文字识别，匹配卡牌名称
+/// 使用 ScreenCaptureKit (macOS 14.0+) 替代已废弃的 CGWindowListCreateImage
 @MainActor
 final class VisionOCRScanner {
     private let cardDatabase: CardDatabase
@@ -34,26 +32,33 @@ final class VisionOCRScanner {
 
     /// 扫描指定区域（Cocoa 坐标系）
     func scan(region: CGRect) {
-        recognitionQueue.async { [weak self] in
-            guard let self else { return }
-            // 在后台线程截取屏幕（调用文件私有函数，非 @MainActor）
-            let cgImage = captureWindowScreenshot(region: region)
+        Task {
+            // 使用 ScreenCaptureKit 截图（需 MainActor）
+            let cgImage = await ScreenCapture.capture(region: region) ?? captureWindowScreenshotLegacy(region: region)
             guard let cgImage else { return }
-            // 主线程进行识别
-            Task { @MainActor [weak self] in
-                self?.recognize(cgImage: cgImage)
+            // 后台线程识别
+            recognitionQueue.async { [weak self] in
+                guard let self else { return }
+                Task { @MainActor in
+                    self.recognize(cgImage: cgImage)
+                }
             }
         }
     }
 
     /// 扫描炉石游戏窗口
-    @MainActor
     func scanGameWindow() {
-        guard let window = findHearthstoneWindow() else {
-            print("[OCR] Hearthstone window not found")
-            return
+        Task {
+            // 查找窗口 + 截图（使用 ScreenCaptureKit）
+            guard let windowRect = ScreenCapture.findHearthstoneWindow() else {
+                print("[OCR] Hearthstone window not found")
+                return
+            }
+            let cgImage = await ScreenCapture.capture(region: windowRect) ?? captureWindowScreenshotLegacy(region: windowRect)
+            guard let cgImage else { return }
+            // 主线程识别
+            self.recognize(cgImage: cgImage)
         }
-        scan(region: window)
     }
 
     // MARK: - Private Recognition
@@ -178,31 +183,6 @@ final class VisionOCRScanner {
         }
 
         return Array(best.values)
-    }
-
-    // MARK: - Window Detection
-
-    @MainActor
-    private func findHearthstoneWindow() -> CGRect? {
-        let options = CGWindowListOption(arrayLiteral: .optionOnScreenOnly)
-        guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
-            return nil
-        }
-
-        for window in windowList {
-            guard let name = window[kCGWindowName as String] as? String else { continue }
-            if name.contains("Hearthstone") || name.contains("炉石") {
-                if let boundsDict = window[kCGWindowBounds as String] as? [String: CGFloat] {
-                    return CGRect(
-                        x: boundsDict["X"] ?? 0,
-                        y: boundsDict["Y"] ?? 0,
-                        width: boundsDict["Width"] ?? 0,
-                        height: boundsDict["Height"] ?? 0
-                    )
-                }
-            }
-        }
-        return nil
     }
 }
 

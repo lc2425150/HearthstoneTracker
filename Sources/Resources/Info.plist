@@ -26,6 +26,10 @@
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<false/>
+	<key>NSApplicationSupportsSecureRestorableState</key>
+	<true/>
+	<key>NSWindowRestorationEnabled</key>
+	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

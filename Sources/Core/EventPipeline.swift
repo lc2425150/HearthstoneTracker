@@ -14,7 +14,7 @@ final class EventPipeline: ObservableObject {
 
     // MARK: - Published
 
-    @Published var cardEvents = PassthroughSubject<CardEvent, Never>()
+    let cardEvents = PassthroughSubject<CardEvent, Never>()
     let onGameStart = PassthroughSubject<Void, Never>()
 
     // MARK: - Init
@@ -67,9 +67,7 @@ final class EventPipeline: ObservableObject {
             ]
         )
 
-        DispatchQueue.main.async {
-            self.cardEvents.send(event)
-        }
+        self.cardEvents.send(event)
     }
 
     private func convertEventType(_ parsed: ParsedEventType) -> CardEventType {

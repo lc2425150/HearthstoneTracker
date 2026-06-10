@@ -35,6 +35,7 @@ $XCODE_SWIFT \
   -framework Combine -framework Vision \
   -framework UniformTypeIdentifiers -framework CoreGraphics \
   -framework CoreFoundation -framework SwiftData \
+  -framework ScreenCaptureKit \
   "${SOURCES[@]}"
 
 echo "✅ 编译成功！（耗时 $(( $(date +%s) - START )) 秒）"

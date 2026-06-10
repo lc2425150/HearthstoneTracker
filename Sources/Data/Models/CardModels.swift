@@ -12,7 +12,24 @@ final class Card {
     var type: String
     var set: String
     
-    init(dbfId: Int, cardId: String = "", name: String, cost: Int, cardClass: String, rarity: String, type: String, set: String) {
+    var enName: String = ""
+    var attack: Int = 0
+    var health: Int = 0
+    var race: String = ""
+    var races: [String] = []
+    var spellSchool: String = ""
+    var mechanics: [String] = []
+    var isStandard: Bool = false
+    var collectible: Bool = true
+    var artist: String = ""
+    var flavor: String = ""
+    var techLevel: Int = 0
+    var overload: Int = 0
+    var multiClassGroup: String = ""
+    var hideStats: Bool = false
+    
+    init(dbfId: Int, cardId: String = "", name: String, cost: Int, cardClass: String, rarity: String, type: String, set: String, 
+         enName: String = "", attack: Int = 0, health: Int = 0) {
         self.dbfId = dbfId
         self.cardId = cardId
         self.name = name
@@ -21,6 +38,9 @@ final class Card {
         self.rarity = rarity
         self.type = type
         self.set = set
+        self.enName = enName
+        self.attack = attack
+        self.health = health
     }
 }
 
@@ -149,9 +169,22 @@ class CardDatabase {
     private var _container: ModelContainer?
     var modelContainer: ModelContainer {
         if let c = _container { return c }
-        let c = try! ModelContainer(for: Card.self, MatchRecord.self, SavedDeck.self)
-        _container = c
-        return c
+        do {
+            let c = try ModelContainer(for: Card.self, MatchRecord.self, SavedDeck.self)
+            _container = c
+            return c
+        } catch {
+            print("[CardDatabase] Failed to create ModelContainer: \(error)")
+            // 如果默认配置失败，尝试内存配置（仅用于本次运行）
+            do {
+                let config = ModelConfiguration(isStoredInMemoryOnly: true)
+                let c = try ModelContainer(for: Card.self, MatchRecord.self, SavedDeck.self, configurations: config)
+                _container = c
+                return c
+            } catch {
+                fatalError("[CardDatabase] Cannot create any ModelContainer: \(error)")
+            }
+        }
     }
     let allModels: [any PersistentModel.Type] = [Card.self, MatchRecord.self, SavedDeck.self]
     
@@ -170,6 +203,57 @@ class CardDatabase {
     }
     
     func cards(for dbfIds: [Int]) -> [Card] { dbfIds.compactMap { card(for: $0) } }
+    
+    // MARK: - 增强搜索
+    
+    /// 获取所有卡牌
+    var allStoredCards: [Card] {
+        let desc = FetchDescriptor<Card>()
+        return (try? modelContainer.mainContext.fetch(desc)) ?? []
+    }
+    
+    func cardByEnglishName(_ name: String) -> Card? {
+        return allStoredCards.first { $0.enName == name || $0.name == name }
+    }
+    
+    func cardsByClass(_ cardClass: String) -> [Card] {
+        return allStoredCards.filter { $0.cardClass == cardClass }
+    }
+    
+    func cardsByCostRange(min: Int, max: Int) -> [Card] {
+        return allStoredCards.filter { $0.cost >= min && $0.cost <= max }
+    }
+    
+    func cardsByMechanic(_ mechanic: String) -> [Card] {
+        return allStoredCards.filter { $0.mechanics.contains(mechanic) }
+    }
+    
+    func search(query: String?, cardClass: String?, 
+                costRange: ClosedRange<Int>?, mechanic: String?, 
+                rarity: String?) -> [Card] {
+        var results = allStoredCards
+        if let query = query, !query.isEmpty {
+            let lower = query.lowercased()
+            results = results.filter {
+                $0.name.lowercased().contains(lower) ||
+                $0.enName.lowercased().contains(lower) ||
+                $0.cardId.lowercased().contains(lower)
+            }
+        }
+        if let cardClass = cardClass, cardClass != "all" {
+            results = results.filter { $0.cardClass == cardClass }
+        }
+        if let costRange = costRange {
+            results = results.filter { costRange.contains($0.cost) }
+        }
+        if let mechanic = mechanic, !mechanic.isEmpty {
+            results = results.filter { $0.mechanics.contains(mechanic) }
+        }
+        if let rarity = rarity, !rarity.isEmpty, rarity != "all" {
+            results = results.filter { $0.rarity == rarity }
+        }
+        return results
+    }
 }
 
 
@@ -219,4 +303,5 @@ enum CardDisplaySize: String, CaseIterable, Codable {
         case .large:  return 380
         }
     }
+
 }

@@ -98,3 +98,30 @@ Sources/
 - Vision OCR 扫描使用 Apple Vision 框架
 - 日志监控使用 `FileHandle` 监听 Hearthstone 日志文件变化
 - 编译时注意仅为 arm64-apple-macos14.0 架构
+
+---
+
+## ⚡ 执行前必读
+
+### 开发上下文
+每次执行任务前，必须先阅读项目开发上下文文档：
+**`docs/DEVELOPMENT_CONTEXT.md`**
+包含：架构决策、开发阶段记录、文件结构、已知问题、构建方式等关键信息。
+
+### 快速启动
+```bash
+cd /Users/achen/Documents/炉石传说记牌器
+bash build_dmg.sh        # 编译
+open .build/HearthstoneTracker.app  # 运行
+```
+
+### 核心原则
+1. **HSTracker 优先** — 悬浮窗用 AppKit (OverWindowController + WindowManager)，架构用 Singleton + CoreManager
+2. **Keychain 存储 API Key** — 不使用 UserDefaults
+3. **AppDelegate.instance().coreManager** 链式访问
+4. **`@main` 在 HearthstoneTrackerApp**，AppDelegate 为委托
+
+### 已修复的常见 Bug
+- AISuggestionWindow 闪退 → `@EnvironmentObject` 改为参数注入
+- `@Published` 不能用于计算属性
+- KeychainManager 命名冲突已合并

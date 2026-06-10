@@ -26,6 +26,8 @@ final class LogFileWatcher: @unchecked Sendable {
         }
 
         print("[LogWatcher] Monitoring: \(path)")
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: path)[.size]) ?? 0
+        print("[LogWatcher] File size: \(fileSize)")
 
         do {
             fileHandle = try FileHandle(forReadingFrom: URL(fileURLWithPath: path))
@@ -106,8 +108,24 @@ final class LogFileWatcher: @unchecked Sendable {
 
     private func parseLines(_ text: String) {
         let lines = text.components(separatedBy: .newlines)
-        for line in lines {
-            Task { @MainActor in parser.feedLine(line) }
+        // 限制单次处理行数，防止主线程卡顿
+        let maxLinesPerBatch = 500
+        let totalLines = lines.count
+        
+        Task { @MainActor in
+            // 分块处理：每批最多 500 行，避免主线程长时间阻塞
+            var index = 0
+            while index < totalLines {
+                let end = min(index + maxLinesPerBatch, totalLines)
+                for i in index..<end {
+                    parser.feedLine(lines[i])
+                }
+                index = end
+                // 如果还有更多行，让出主线程以响应 UI 事件
+                if index < totalLines {
+                    await Task.yield()
+                }
+            }
         }
     }
 }

@@ -86,7 +86,7 @@ final class OverlayWindowController: NSObject, @unchecked Sendable {
         let initialLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? false
         updateWindowLockState(window: window, locked: initialLocked)
         
-        window.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
+        // 使用 HSTracker 风格的窗口层级
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         window.delegate = self
 

@@ -90,6 +90,8 @@ final class PowerLogParser {
         entities.removeAll()
         playerControllerID = 0
         currentBlock = nil
+        playerDeckDBFIds.removeAll()
+        gameInProgress = false
     }
 
     // MARK: - Parse Helpers

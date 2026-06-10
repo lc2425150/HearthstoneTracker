@@ -6,6 +6,12 @@ enum Constants {
 
     static let appName = "HearthstoneTracker"
     static let appVersion = "1.4.0"
+    static let appBuild = 2001 // v2.0 phase1
+    
+    // MARK: - Keychain
+    
+    static let keychainAIKey = "aiApiKey"
+    static let keychainAIProvider = "aiProviderType"
 
     // MARK: - File Paths
 
@@ -15,10 +21,7 @@ enum Constants {
     ]
 
     static var powerLogPath: String {
-        for path in logFilePaths {
-            if FileManager.default.fileExists(atPath: path) { return path }
-        }
-        return logFilePaths.first ?? ""
+        return LogPathFinder.discoverPowerLog() ?? logFilePaths.first ?? ""
     }
 
     static var cardDataPath: String {

@@ -28,7 +28,7 @@ final class HSReplayManager {
         self.session = URLSession(configuration: config)
         
         // Check stored token
-        if let _ = KeychainManager.shared.getHSReplayToken() {
+        if let _ = KeychainManager.getHSReplayToken() {
             isAuthenticated = true
         }
     }
@@ -41,21 +41,21 @@ final class HSReplayManager {
     
     /// 设置 API Token（用户从 HSReplay.net 复制）
     func setToken(_ token: String) {
-        KeychainManager.shared.saveHSReplayToken(token)
+        KeychainManager.saveHSReplayToken(token)
         isAuthenticated = true
         fetchUsername()
     }
     
     /// 登出
     func logout() {
-        KeychainManager.shared.clearHSReplayToken()
+        KeychainManager.clearHSReplayToken()
         isAuthenticated = false
         username = nil
     }
     
     /// 获取用户信息
     private func fetchUsername() {
-        guard let token = KeychainManager.shared.getHSReplayToken(),
+        guard let token = KeychainManager.getHSReplayToken(),
               let url = URL(string: "\(apiURL)/account/") else { return }
         
         var request = URLRequest(url: url)
@@ -76,7 +76,7 @@ final class HSReplayManager {
     
     /// 上传对局记录
     func uploadMatch(_ match: MatchRecord, playerDeckCode: String?) async {
-        guard let token = KeychainManager.shared.getHSReplayToken(),
+        guard let token = KeychainManager.getHSReplayToken(),
               let url = URL(string: "\(apiURL)/game/replay/") else {
             uploadStatus = .failed("未登录 HSReplay.net")
             return
@@ -121,49 +121,3 @@ final class HSReplayManager {
 }
 
 /// 简单的钥匙串管理器（存储 HSReplay Token）
-final class KeychainManager {
-    static let shared = KeychainManager()
-    private let service = "com.hearthstonetracker.hsreplay"
-    
-    func saveHSReplayToken(_ token: String) {
-        guard let data = token.data(using: .utf8) else { return }
-        
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecValueData as String: data,
-            kSecAttrAccount as String: "token"
-        ]
-        
-        // Delete existing
-        SecItemDelete(query as CFDictionary)
-        SecItemAdd(query as CFDictionary, nil)
-    }
-    
-    func getHSReplayToken() -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: "token",
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne
-        ]
-        
-        var result: AnyObject?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data,
-              let token = String(data: data, encoding: .utf8) else {
-            return nil
-        }
-        return token
-    }
-    
-    func clearHSReplayToken() {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: "token"
-        ]
-        SecItemDelete(query as CFDictionary)
-    }
-}

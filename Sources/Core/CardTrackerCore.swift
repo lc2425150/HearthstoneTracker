@@ -87,6 +87,7 @@ final class CardTrackerCore: ObservableObject {
     let ocrScanner: VisionOCRScanner
     let opponentTracker: OpponentCardTracker
     let gameLauncher = GameLauncher.shared
+    let deckRecommendation = DeckRecommendationService.shared
 
     // MARK: - AI Assistant
 
@@ -98,7 +99,14 @@ final class CardTrackerCore: ObservableObject {
         didSet { AIManager.shared.selectedProvider = aiProviderType }
     }
     @Published var aiApiKey: String = "" {
-        didSet { AIManager.shared.apiKey = aiApiKey }
+        didSet {
+            if aiApiKey.isEmpty {
+                KeychainManager.delete(key: Constants.keychainAIKey)
+            } else {
+                KeychainManager.save(key: Constants.keychainAIKey, value: aiApiKey)
+            }
+            AIManager.shared.apiKey = aiApiKey
+        }
     }
     @Published var aiAnalysisMode: AIAnalysisMode = .auto {
         didSet { AIManager.shared.analysisMode = aiAnalysisMode }
@@ -130,6 +138,9 @@ final class CardTrackerCore: ObservableObject {
         opponentTracker = OpponentCardTracker(database: cardDatabase)
         eventPipeline = EventPipeline(database: cardDatabase)
         cardDataUpdater = CardDataUpdater(database: cardDatabase)
+        
+        // 共享数据库实例给子模块，避免多个 ModelContainer 冲突
+        StatsManager.configure(database: cardDatabase)
         
         // 读取卡牌尺寸和数据库来源设置
         windowsLocked = UserDefaults.standard.object(forKey: "windowsLocked") as? Bool ?? false
@@ -226,7 +237,12 @@ final class CardTrackerCore: ObservableObject {
                 self.opponentTracker.handleOCRResult(result)
             }
         }
-        ocrScanner.scanGameWindow()
+        // 后台延迟首次扫描，避免阻塞主线程
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒延迟
+            guard self.isTracking else { return }
+            self.ocrScanner.scanGameWindow()
+        }
     }
     
     // OCR 定时扫描循环（每 3 秒一次）
@@ -346,6 +362,13 @@ final class CardTrackerCore: ObservableObject {
     }
 
     /// 解析并导入卡组码（无字数限制）
+    /// 如有必要则导入卡组（推荐卡组一键复制时调用）
+    func importDeckIfNeeded(from deckCode: String) {
+        if playerDeck == nil {
+            importDeck(from: deckCode)
+        }
+    }
+    
     func importDeck(from deckCode: String) {
         deckImportError = nil
 
@@ -397,7 +420,6 @@ final class CardTrackerCore: ObservableObject {
         m.result = result
         cardDatabase.saveMatch(m)
         Task { @MainActor in
-            loadMatchHistory()
             loadMatchHistory()
         }
         

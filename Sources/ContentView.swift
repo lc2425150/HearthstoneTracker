@@ -14,8 +14,9 @@ struct ContentView: View {
                 Spacer()
                 // AI 出牌建议按钮
                 Button(action: {
-                    AISuggestionWindowController.shared.toggle()
+                    AISuggestionWindowController.shared.toggle(core: core)
                     if !core.aiIsAnalyzing && AIManager.shared.lastSuggestion == nil {
+                        // 安全调用：requestAIAnalysis 内部已处理空 API Key 情况
                         core.requestAIAnalysis()
                     }
                 }) {
@@ -75,11 +76,17 @@ struct ContentView: View {
                     }
                     .tag(2)
 
+                RecommendedDecksView()
+                    .tabItem {
+                        Label("推荐", systemImage: "star.fill")
+                    }
+                    .tag(3)
+
                 SettingsView()
                     .tabItem {
                         Label("设置", systemImage: "gearshape")
                     }
-                    .tag(3)
+                    .tag(4)
             }
         }
         .frame(minWidth: 420, minHeight: 520)
@@ -98,16 +105,21 @@ struct ContentView: View {
 struct DeckView: View {
     @EnvironmentObject var core: CardTrackerCore
     @State private var manualDeckCode = ""
+    @FocusState private var deckCodeFieldFocused: Bool
 
     var body: some View {
         VStack(spacing: 20) {
+            // 防止 TextField 自动获取焦点触发 IMK Bug
+            Color.clear
+                .frame(width: 0, height: 0)
+                .onAppear { deckCodeFieldFocused = false }
             if let deck = core.playerDeck {
                 loadedDeckView(deck)
             } else {
                 emptyDeckView
             }
 
-            // 手动输入卡组码（无字数限制，使用 TextEditor）
+            // 手动输入卡组码（无字数限制，使用 TextField）
             VStack(spacing: 8) {
                 Divider()
                 VStack(alignment: .leading, spacing: 4) {
@@ -115,11 +127,16 @@ struct DeckView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    TextEditor(text: $manualDeckCode)
+                    TextField("在此粘贴卡组码...", text: $manualDeckCode)
                         .font(.body.monospaced())
-                        .frame(minHeight: 40, maxHeight: 80)
-                        .border(Color(nsColor: .separatorColor), width: 0.5)
-                        .cornerRadius(4)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($deckCodeFieldFocused)
+                        .onSubmit {
+                            if !manualDeckCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                core.importDeck(from: manualDeckCode)
+                                manualDeckCode = ""
+                            }
+                        }
                     
                     HStack {
                         if !core.isDataReady {
@@ -323,7 +340,63 @@ struct StatsView: View {
                     .padding(.horizontal)
                 }
 
-                // AI 对局分析
+                // 职业胜率明细
+                if core.matchStats.totalMatches > 0 {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("职业胜率")
+                            .font(.subheadline).bold()
+                        ForEach(HeroClass.allCases.filter { $0 != .unknown }, id: \.self) { hClass in
+                            let rate = StatsManager.shared.winRateByClass(hClass.rawValue)
+                            if rate > 0 {
+                                HStack {
+                                    Text(hClass.displayName)
+                                        .font(.caption)
+                                        .frame(width: 60, alignment: .leading)
+                                    GeometryReader { geo in
+                                        ZStack(alignment: .leading) {
+                                            RoundedRectangle(cornerRadius: 3)
+                                                .fill(Color.gray.opacity(0.2))
+                                                .frame(height: 14)
+                                            RoundedRectangle(cornerRadius: 3)
+                                                .fill(rate > 0.5 ? Color.green : Color.red)
+                                                .frame(width: geo.size.width * rate, height: 14)
+                                        }
+                                    }
+                                    .frame(height: 14)
+                                    Text(String(format: "%.0f%%", rate * 100))
+                                        .font(.caption2)
+                                        .frame(width: 40)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                
+                // 对手记忆
+                let opponents = OpponentMemoryManager.shared.allOpponents
+                if !opponents.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("最近对手 (\(opponents.count)人)")
+                            .font(.subheadline).bold()
+                        ForEach(opponents.prefix(5), id: \.name) { opp in
+                            HStack {
+                                Text(opp.name)
+                                    .font(.caption)
+                                Spacer()
+                                Text("\(opp.totalGames)场")
+                                    .font(.caption2)
+                                Text(String(format: "%.0f%%", opp.winRate * 100))
+                                    .font(.caption2)
+                                    .foregroundColor(opp.winRate > 0.5 ? .green : .red)
+                            }
+                            .padding(.horizontal, 4)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                
+            // AI 对局分析
                 if !core.aiApiKey.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
@@ -937,6 +1010,53 @@ struct SettingsView: View {
             }
 
             Section("AI 出牌助手") {
+                // 快速分析按钮
+                HStack {
+                    Button("🔮 手牌预测") {
+                        Task { @MainActor in
+                            _ = await AIManager.shared.analyzeHandPrediction(core: core)
+                            core.aiSuggestion = AIManager.shared.lastSuggestion
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    
+                    Button("🃏 留牌建议") {
+                        Task { @MainActor in
+                            guard let deck = core.playerDeck else { return }
+                            let handCards = deck.handOriginal.map { $0.name }
+                            _ = await AIManager.shared.analyzeMulligan(
+                                playerClass: deck.heroClass.rawValue,
+                                opponentClass: core.currentMatch?.opponentClass ?? "",
+                                handCards: handCards,
+                                core: core
+                            )
+                            core.aiSuggestion = AIManager.shared.lastSuggestion
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    
+                    Button("📊 卡组优化") {
+                        Task { @MainActor in
+                            guard let deck = core.playerDeck else { return }
+                            let cards = deck.cardCounts.compactMap { (dbfId, count) -> (name: String, count: Int)? in
+                                                        guard let card = deck.cardPool[dbfId] else { return nil }
+                                                        return (card.name, count)
+                                                    }
+                            _ = await AIManager.shared.analyzeDeck(
+                                heroClass: deck.heroClass.rawValue,
+                                cards: cards
+                            )
+                            core.aiSuggestion = AIManager.shared.lastSuggestion
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+                .padding(.vertical, 4)
+                
+
                 Picker("AI 模型", selection: $core.aiProviderType) {
                     ForEach(AIProviderType.allCases, id: \.self) { provider in
                         HStack {
@@ -1000,6 +1120,22 @@ struct SettingsView: View {
                 }
             }
 
+            Section("数据管理") {
+                Button("📤 导出对局记录 (CSV)") {
+                    if let url = DataExporter.exportMatchesToCSV(database: core.cardDatabase) {
+                        DataExporter.showShareDialog(url: url)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                
+                Button("🧹 清空图片缓存") {
+                    CardImageCache.shared.clear()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+            
             Section("版本信息") {
                 HStack {
                     Text("当前版本")

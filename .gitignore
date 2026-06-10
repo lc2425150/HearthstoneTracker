@@ -31,3 +31,5 @@ ios/*.xcuserdata
 ios/DerivedData/
 ios/Pods/
 ios/*.xcworkspace
+.superpowers/
+docs/superpowers/

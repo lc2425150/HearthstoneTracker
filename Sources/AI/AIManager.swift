@@ -10,7 +10,14 @@ final class AIManager: ObservableObject {
         didSet { UserDefaults.standard.set(selectedProvider.rawValue, forKey: "aiProviderType") }
     }
     @Published var apiKey: String = "" {
-        didSet { UserDefaults.standard.set(apiKey, forKey: "aiApiKey") }
+        didSet {
+            // 同步到 Keychain
+            if apiKey.isEmpty {
+                KeychainManager.delete(key: Constants.keychainAIKey)
+            } else {
+                KeychainManager.save(key: Constants.keychainAIKey, value: apiKey)
+            }
+        }
     }
     @Published var isAnalyzing = false
     @Published var lastSuggestion: AISuggestion?
@@ -18,6 +25,67 @@ final class AIManager: ObservableObject {
     @Published var analysisMode: AIAnalysisMode = .auto {
         didSet { UserDefaults.standard.set(analysisMode.rawValue, forKey: "aiAnalysisMode") }
     }
+
+    // MARK: - 子分析器（Phase 3）
+    
+    private let handPredictor = HandPredictor()
+    private let mulliganAdvisor = MulliganAdvisor()
+    private let deckOptimizer = DeckOptimizer()
+    private let roundSummarizer = RoundSummarizer()
+    
+    // MARK: - 手牌预测
+    
+    @discardableResult
+    func analyzeHandPrediction(core: CardTrackerCore) async -> String? {
+        guard !isAnalyzing else { return nil }
+        isAnalyzing = true
+        lastError = nil
+        
+        let gameState = GameStateFormatter.format(core: core)
+        let prompt = handPredictor.buildPrompt(gameState: gameState)
+        
+        do {
+            let provider = try currentProvider()
+            let suggestion = try await provider.analyzeMatchData(matchSummary: prompt)
+            self.lastSuggestion = suggestion
+            isAnalyzing = false
+            return suggestion.suggestion
+        } catch {
+            self.lastError = error.localizedDescription
+            isAnalyzing = false
+            return nil
+        }
+    }
+    
+    // MARK: - 留牌建议
+    
+    @discardableResult
+    func analyzeMulligan(playerClass: String, opponentClass: String,
+                         handCards: [String], core: CardTrackerCore) async -> String? {
+        guard !isAnalyzing else { return nil }
+        isAnalyzing = true
+        lastError = nil
+        
+        let gameState = GameStateFormatter.format(core: core)
+        let prompt = mulliganAdvisor.buildPrompt(
+            playerClass: playerClass, opponentClass: opponentClass,
+            handCards: handCards, gameState: gameState
+        )
+        
+        do {
+            let provider = try currentProvider()
+            let suggestion = try await provider.analyzeMatchData(matchSummary: prompt)
+            self.lastSuggestion = suggestion
+            isAnalyzing = false
+            return suggestion.suggestion
+        } catch {
+            self.lastError = error.localizedDescription
+            isAnalyzing = false
+            return nil
+        }
+    }
+    
+
     
     private var lastAnalysisTime: Date?
     private let minInterval: TimeInterval = 8 // 最小分析间隔：8秒（实时模式）
@@ -27,7 +95,7 @@ final class AIManager: ObservableObject {
            let p = AIProviderType(rawValue: saved) {
             selectedProvider = p
         }
-        apiKey = UserDefaults.standard.string(forKey: "aiApiKey") ?? ""
+        apiKey = KeychainManager.read(key: Constants.keychainAIKey) ?? UserDefaults.standard.string(forKey: "aiApiKey") ?? ""
         if let saved = UserDefaults.standard.string(forKey: "aiAnalysisMode"),
            let mode = AIAnalysisMode(rawValue: saved) {
             analysisMode = mode
@@ -68,7 +136,7 @@ final class AIManager: ObservableObject {
             let provider = try currentProvider()
             
             // 截取游戏窗口
-            guard let screenData = captureGameScreen() else {
+            guard let screenData = await captureGameScreen() else {
                 throw AIError.networkError("无法截取游戏画面")
             }
             
@@ -89,54 +157,38 @@ final class AIManager: ObservableObject {
         }
     }
     
-    /// 截取 Hearthstone 窗口（后台线程 + 降低分辨率）
-    private func captureGameScreen() -> Data? {
-        // 在后台线程执行截图
-        let semaphore = DispatchSemaphore(value: 0)
-        var result: Data?
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            let options = CGWindowListOption(arrayLiteral: .optionOnScreenOnly, .excludeDesktopElements)
-            guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
-                semaphore.signal()
-                return
-            }
-            
-            for info in windowList {
-                guard let ownerName = info["kCGWindowOwnerName"] as? String,
-                      ownerName == "Hearthstone" || ownerName.contains("炉石"),
-                      let boundsDict = info["kCGWindowBounds"] as? [String: CGFloat],
-                      let x = boundsDict["X"], let y = boundsDict["Y"],
-                      let w = boundsDict["Width"], let h = boundsDict["Height"],
-                      w > 300, h > 300 else { continue }
-                
-                let region = CGRect(x: x, y: y, width: w, height: h)
-                guard let cgImage = CGWindowListCreateImage(region, .optionOnScreenOnly, kCGNullWindowID, .bestResolution) else {
-                    semaphore.signal()
-                    return
-                }
-                
-                // 缩小图片到50%以减少API传输时间
-                let smallW = Int(w / 2)
-                let smallH = Int(h / 2)
-                if let context = CGContext(data: nil, width: smallW, height: smallH,
-                                           bitsPerComponent: 8, bytesPerRow: 0,
-                                           space: CGColorSpaceCreateDeviceRGB(),
-                                           bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue) {
-                    context.interpolationQuality = .medium
-                    context.draw(cgImage, in: CGRect(x: 0, y: 0, width: smallW, height: smallH))
-                    if let resized = context.makeImage() {
-                        let bitmap = NSBitmapImageRep(cgImage: resized)
-                        result = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.7])
-                    }
-                }
-                break
-            }
-            semaphore.signal()
+    /// 截取 Hearthstone 窗口（使用 ScreenCaptureKit）
+    @MainActor
+    private func captureGameScreen() async -> Data? {
+        // 查找 Hearthstone 窗口
+        guard let windowRect = ScreenCapture.findHearthstoneWindow(),
+              windowRect.width > 300, windowRect.height > 300 else {
+            print("[AIManager] Hearthstone window not found or too small")
+            return nil
         }
         
-        _ = semaphore.wait(timeout: .now() + 5)
-        return result
+        // 截取窗口（优先 ScreenCaptureKit，降级到 CG）
+        guard let cgImage = await ScreenCapture.capture(region: windowRect) ?? captureLegacy(region: windowRect) else {
+            return nil
+        }
+        
+        // 缩小图片到50%以减少API传输时间
+        let smallW = Int(windowRect.width / 2)
+        let smallH = Int(windowRect.height / 2)
+        guard let context = CGContext(data: nil, width: smallW, height: smallH,
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue) else { return nil }
+        context.interpolationQuality = .medium
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: smallW, height: smallH))
+        guard let resized = context.makeImage() else { return nil }
+        let bitmap = NSBitmapImageRep(cgImage: resized)
+        return bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.7])
+    }
+    
+    /// 降级截图方案
+    private func captureLegacy(region: CGRect) -> CGImage? {
+        CGWindowListCreateImage(region, .optionOnScreenOnly, kCGNullWindowID, .bestResolution)
     }
     
 
@@ -152,8 +204,8 @@ final class AIManager: ObservableObject {
         isAnalyzing = true
         lastError = nil
         
-        let gameState = await GameStateFormatter.format(core: core)
-        let req = await RealTimeAnalysisRequest.from(core: core)
+        let gameState = GameStateFormatter.format(core: core)
+        let req = RealTimeAnalysisRequest.from(core: core)
         
         let prompt = """
 你是一个炉石传说实时对局AI助手。根据当前对局状态，给出最优打法建议。
